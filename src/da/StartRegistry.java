@@ -12,9 +12,9 @@ public class StartRegistry {
 		try {
 			// create on port 1099
 			Registry registry = LocateRegistry.createRegistry(1099);
-			process = new Process();
+			process = new Process(0);
 			// create on port 1099
-			process.register("127.0.0.1", "0");
+			process.register("localhost");
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
