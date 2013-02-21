@@ -1,5 +1,7 @@
 package da;
 
+import java.rmi.AccessException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -9,45 +11,23 @@ import java.util.ArrayList;
 public class Process extends UnicastRemoteObject implements IHandleRMI{
 	ArrayList<Message> buffer;
 
-	public Process() throws RemoteException{
-		
+	Registry registry;
+	Integer pid;
+	
+	public Process(Integer pid) throws RemoteException{
+		this.pid = pid;
 	}
 	
-	void register(String ip, String processName) {
+	void register(String ip) {
 		try{
-			// create a new service named myMessage
-			LocateRegistry.getRegistry(ip, 1099);
+            registry = LocateRegistry.getRegistry(ip, 1099);
 			
-            Registry myRegistry = LocateRegistry.getRegistry(ip, 1099);
-			
-            myRegistry.rebind(processName, this);
-            
-            IHandleRMI otherprocess;
-            if(processName.equals("1"))
-            {/*
-                 otherprocess = (Process) myRegistry.lookup("2");
-                 Message m= new Message();
-                 m.payload = "Hello I am Process" + processName;
-                 otherprocess.receive(m); */
-            }
-            else if(processName.equals("2"))
-            {
-            	otherprocess = (IHandleRMI) myRegistry.lookup("1");
-                Message m= new Message();
-                m.payload = "Hello I am Process" + processName;
-                otherprocess.receive(m);
-            }
-            else
-            {
-            	
-            }
-
-
-            
+            registry.rebind(pid.toString(), this);
+    
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("system is ready, Process" + processName);
+		System.out.println("system is ready, Process" + pid);
 	}
 	
 	
@@ -55,5 +35,24 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 	public void receive(Message m) throws RemoteException
 	{
 		System.out.println(m.payload);
+	}
+	
+	public void send(Message m, Integer pid)
+	{
+		IHandleRMI otherprocess;
+		try {
+			otherprocess = (IHandleRMI) registry.lookup(pid.toString());
+	        otherprocess.receive(m);
+		} catch (AccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotBoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
 	}
 }
