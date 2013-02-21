@@ -1,8 +1,13 @@
 package da;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 
-public class Message {
+
+public class Message implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 616261230788353828L;
 	String payload;
 	History buffer;
 	Timestamp timestamp;

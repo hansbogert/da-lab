@@ -1,20 +1,23 @@
 package da;
 
+
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
-public class StartRegistry {
+public class StartProcess {
 
 	public static void main(String[] args) {
-		Process process;
-		System.out.println("starting registry");
+		Process process1;
+		Process process2;
+		System.out.println("starting processes");
 		try {
+			process1 = new Process();
+			process2 = new Process();
 			// create on port 1099
-			Registry registry = LocateRegistry.createRegistry(1099);
-			process = new Process();
-			// create on port 1099
-			process.register("127.0.0.1", "0");
+			process1.register("127.0.0.1", "1");
+			process2.register("127.0.0.1", "2");
+			
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
