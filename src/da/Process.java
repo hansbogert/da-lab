@@ -31,15 +31,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 
 	public void sendTo(Message m, Integer pid) throws AccessException,
 			RemoteException, NotBoundException {
-		IHandleRMI otherprocess;
-		otherprocess = (IHandleRMI) registry.lookup(pid.toString());
+		IHandleRMI otherprocess = (IHandleRMI) registry.lookup(pid.toString());
 		otherprocess.receive(m);
-	}
-	
-	public void send(Message m, Integer pid) throws AccessException, RemoteException, NotBoundException
-	{
-		IHandleRMI otherprocess;
-			otherprocess = (IHandleRMI) registry.lookup(pid.toString());
-	        otherprocess.receive(m);
 	}
 }
