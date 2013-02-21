@@ -18,15 +18,11 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 		this.pid = pid;
 	}
 	
-	void register(String ip) {
-		try{
-            registry = LocateRegistry.getRegistry(ip, 1099);
-			
-            registry.rebind(pid.toString(), this);
+	void register(String ip) throws RemoteException {
+		registry = LocateRegistry.getRegistry(ip, 1099);
+        registry.rebind(pid.toString(), this);
     
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		
 		System.out.println("system is ready, Process" + pid);
 	}
 	
@@ -37,22 +33,10 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 		System.out.println(m.payload);
 	}
 	
-	public void send(Message m, Integer pid)
+	public void send(Message m, Integer pid) throws AccessException, RemoteException, NotBoundException
 	{
 		IHandleRMI otherprocess;
-		try {
 			otherprocess = (IHandleRMI) registry.lookup(pid.toString());
 	        otherprocess.receive(m);
-		} catch (AccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        
 	}
 }
