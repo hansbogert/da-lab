@@ -1,7 +1,9 @@
 package da;
 
+import java.util.ArrayList;
+
 public class Message {
 	String payload;
-	ArrayList<History> buffer;
+	History buffer;
 	Timestamp timestamp;
 }
