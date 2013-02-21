@@ -1,4 +1,4 @@
-package da;
+package message;
 
 import java.io.Serializable;
 
@@ -11,4 +11,12 @@ public class Message implements Serializable {
 	String payload;
 	History buffer;
 	Timestamp timestamp;
+	
+	public String getPayload() {
+		return payload;
+	}
+	
+	public void setPayload(String payload){
+		this.payload = payload;
+	}
 }
