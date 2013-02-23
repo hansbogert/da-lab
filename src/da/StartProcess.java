@@ -1,28 +1,84 @@
 package da;
 
+import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+/*
+ * Start a process.
+ * Check if the registry already started.
+ * If not, start the registry first.
+ */
 public class StartProcess {
 	
-	Registry myRegistry;
-
+	Process process;
+	String registryIP;
+	Registry registry;
+	Boolean isRegistryStarted;
+	
 	public static void main(String[] args) {
-		Process process;
-		System.out.println("starting processes");
+		
+		StartProcess s = new StartProcess();
+		s.start();
+	}
+	
+	/*
+	 * Start a process.
+	 * Check if the registry already started.
+	 * If not, start the registry first.
+	 */
+	public void start() {
+
+		//Set the ip addres of the registry.
+		registryIP = "127.0.0.1";
+		//Check if the registry is started.
+		isRegistryStarted = isRegistryStarted(registryIP);
+		
+		//print Registry status
+		String registryStatus = (isRegistryStarted) ? "Registry started." : "Starting registry";
+		System.out.println(registryStatus);
+		
 		try {
-			LocateRegistry.getRegistry("127.0.0.1", 1099);
-
-			process = new Process();
-			process.register("127.0.0.1");
-			process.boardcastRepeatly(30);
-			process.talktoRandomProcessRepeatly(10);
-
 			
+			//If Registry is not started, start it.
+			if(!isRegistryStarted)
+				{ registry = LocateRegistry.createRegistry(1099); }
+
+			//Start the process.
+			startProcess(registryIP);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
 	}
 	
+	/*
+	 * Start the process.
+	 */
+	public void startProcess(String registryIP) throws RemoteException
+	{
+		process = new Process();
+		process.register(registryIP);
+		process.boardcastRepeatly(30);
+		process.talktoRandomProcessRepeatly(10);
+	}
+	
+	/*
+	 * Check if a registry is already started.
+	 */
+	public boolean isRegistryStarted(String registryIP)
+	{	
+		boolean isStarted = false;
+		
+		try {
+			registry = LocateRegistry.getRegistry(registryIP, 1099);
+			if(!registry.list().equals(null))
+			{ isStarted = true;}
+			
+		} catch (ConnectException e) {
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+		return isStarted;
+	}
 }
