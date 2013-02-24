@@ -59,7 +59,8 @@ public class StartProcess {
 	{
 		process = new Process();
 		process.register(registryIP);
-		process.boardcastRepeatly(30);
+		process.init();
+		process.boardcastRepeatly(20);
 		process.talktoRandomProcessRepeatly(10);
 	}
 	

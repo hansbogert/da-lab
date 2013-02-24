@@ -16,7 +16,7 @@ import message.Message;
 import message.ProcessTimestamp;
 import message.Timestamp;
 
-public class Process extends UnicastRemoteObject implements IHandleRMI{
+public class Process_Fake extends UnicastRemoteObject implements IHandleRMI{
 
 	private static final long serialVersionUID = -397296118682038104L;
 
@@ -32,7 +32,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 	/*
 	 * Process is a single component in the distributed system.
 	 */
-	public Process() throws RemoteException{
+	public Process_Fake() throws RemoteException{
 		
 	}
 	
@@ -114,35 +114,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 	 */
 	public void receive(Message m) {
 		
-		//if D(m) then
-		if(deliveryPermitted(m))
-		{
-			//deliver(m)
-			deliver(m);
-			
-			// while ( |{(m,k,Vm) in B | Dk(m)}| > 0 ) TODO what in heaven's name is k?
-			boolean nothingToDeliver = false;
-			while(!nothingToDeliver)
-			{
-				nothingToDeliver = true;
-				for(Message n : B)
-				{
-					if(deliveryPermitted(n))
-					{	
-						nothingToDeliver = false;
-						// deliver such a message m 
-						deliver(n);
-					}
-				}
-			}
-
-		}
-		// else add (m,j,Vm) to B
-		else
-		{
-			B.add(m);
-			//System.out.println("Send to Buffer");
-		}
+		deliver(m);
 	}
 	
 	/*
@@ -176,33 +148,15 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 	public void send(String payload, int remoteProcessId) {
 		try {
 			
-			//Increment timestamp before send event
-			V.incrementAt(processId);
-			
-			//send(m,S,V) to Pj
 			Message m= new Message();
 			m.setPayload(payload);
-			m.S = S;
-			m.V = V;
 			IHandleRMI remoteProcess = (IHandleRMI) registry.lookup(remoteProcessId+"");
 			remoteProcess.transfer(m);
 			
-			//delete any old element for Pj
-			for(int i = 0; i<S.size(); i++) {
-				if(S.get(i).getProcessId() == remoteProcessId)
-				{
-					S.remove(i);
-				}
-			}
-			
-			//insert(j,V) into S
-			ProcessTimestamp rpt = new ProcessTimestamp(remoteProcessId);
-			//TODO V.value == rpt.value Problem?
-			rpt.values = V.values;
-
 		} catch (RemoteException | NotBoundException e) {
 			e.printStackTrace();
 		}
+
 
 	}
 	
@@ -210,40 +164,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 	 * Deliver a message.
 	 */
 	public void deliver(Message m) {
-		
-		//Increment timestamp before send event
-		V.incrementAt(processId);
-		
-		//deliver(m) to P
 		reponseToDelivery(m.payload);
-		//for all ((j,V’) in Sm) do
-		for(ProcessTimestamp ptRemote : m.S)
-		{
-			//if (there exists (j,V’’) in S) then
-			boolean ptLocalExist = false;
-			
-			for(int i = 0; i<S.size(); i++) {
-				if(S.get(i).getProcessId() == ptRemote.getProcessId())
-				{
-					ptLocalExist = true;
-					ProcessTimestamp merged = S.get(i);
-					//remove (j,V’’) from S 
-					S.remove(i);
-					//V’’:=max(V’,V’’)  
-					merged.mergeWith(ptRemote);
-					//insert(j,V’’) into S   
-					S.add(merged);
-				}
-			}
-			
-			//else insert(j,V’) into S
-			if(!ptLocalExist)
-			{
-				S.add(ptRemote);
-			}
-		}
-		
-
 	}
 	
 	/*
