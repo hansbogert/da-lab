@@ -31,7 +31,7 @@ public class StartProcess {
 	public void start() {
 
 		//Set the ip addres of the registry.
-		registryIP = "127.0.0.1";
+		registryIP = "localhost";
 		//Check if the registry is started.
 		isRegistryStarted = isRegistryStarted(registryIP);
 		
@@ -59,8 +59,8 @@ public class StartProcess {
 	{
 		process = new Process();
 		process.register(registryIP);
-		process.boardcastRepeatly(30);
-		process.talktoRandomProcessRepeatly(10);
+		process.broadcastRepeatedly(30);
+		process.talktoRandomProcessRepeatedly(10);
 	}
 	
 	/*

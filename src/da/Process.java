@@ -142,7 +142,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 			
 			Message m= new Message();
 			m.setPayload(payload);
-			IHandleRMI remoteProcess = (IHandleRMI) registry.lookup(remoteProcessId+"");
+			IHandleRMI remoteProcess = (IHandleRMI) registry.lookup(Integer.toString(remoteProcessId));
 			remoteProcess.transfer(m);
 			
 			/* TODO Algorithm
@@ -180,15 +180,15 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 		/* TODO Algorithm
 		for(Timestamp timestamp : buffer)
 		{
-			   if (there exists (j,V’’) in S) then 
+			   if (there exists (j,Vï¿½ï¿½) in S) then 
 
-               remove (j,V’’) from S               
+               remove (j,Vï¿½ï¿½) from S               
                                                     
-               V’’:=max(V’,V’’)              
+               Vï¿½ï¿½:=max(Vï¿½,Vï¿½ï¿½)              
 
-               insert(j,V’’) into S          
+               insert(j,Vï¿½ï¿½) into S          
 
-               else insert(j,V’) into S 
+               else insert(j,Vï¿½) into S 
                
 			
 		}
@@ -266,7 +266,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 	 * Call broadcast() again and again.
 	 * For the fun, and (or) for testing.
 	 */
-	public void boardcastRepeatly(int timespan)
+	public void broadcastRepeatedly(int timespan)
 	{
 	    final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 	    service.scheduleWithFixedDelay(new Runnable()
@@ -283,7 +283,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 	 * Call talktoRandomProces() again and again.
 	 * For the fun, and (or) for testing.
 	 */
-	public void talktoRandomProcessRepeatly(int timespan)
+	public void talktoRandomProcessRepeatedly(int timespan)
 	{
 	    final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 	    service.scheduleWithFixedDelay(new Runnable()
@@ -297,7 +297,11 @@ public class Process extends UnicastRemoteObject implements IHandleRMI{
 	}
 	
 
-	
+	public int getProcessId()
+	{
+		
+		return processId;
+	}
 
 	
 }
