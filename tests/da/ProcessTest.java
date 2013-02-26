@@ -42,13 +42,15 @@ public class ProcessTest {
 			assertNotNull(registry.lookup(Integer.toString(1)));
 			assertNotNull(registry.lookup(Integer.toString(2)));
 
-		} catch (RemoteException | NotBoundException e) {
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (NotBoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public void testSend() {
+	/*public void testSend() {
 		try {
 			Process p1 = new Process();
 			Process p2 = new Process();
@@ -62,6 +64,6 @@ public class ProcessTest {
 			e.printStackTrace();
 		}
 
-	}
+	}*/
 
 }
