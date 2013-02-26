@@ -14,53 +14,48 @@ import java.util.concurrent.TimeUnit;
 
 import message.Message;
 import message.ProcessTimestamp;
-import message.Timestamp;
+import message.VectorClock;
 
 public class Process extends UnicastRemoteObject implements IHandleRMI {
 
 	private static final long serialVersionUID = -397296118682038104L;
 
-	ArrayList<Message> B;
+	ArrayList<Message> undeliveredMessages;
 
 	int processId;
 
 	Registry registry;
 
-	Vector<ProcessTimestamp> S;
-	Timestamp V;
+	Vector<ProcessTimestamp> sentBuffer;
+	VectorClock vectorClock;
 
 	/*
 	 * Process is a single component in the distributed system.
 	 */
 	public Process() throws RemoteException {
-
+		sentBuffer = new Vector<ProcessTimestamp>();
+		vectorClock = new VectorClock();
+		vectorClock.initToZeros(10);
 	}
 
 	/*
 	 * Generate a unique process id and Register in the RMI Registry.
 	 */
 	void register(String ip) {
-		try {
 			// Find the RMI Registry.
-			registry = LocateRegistry.getRegistry(ip, 1099);
-			// Generate a unique processId.
-			processId = getMaxProcessID() + 1;
-			// Register into the RMI Registry.
-			registry.rebind((getMaxProcessID() + 1) + "", this);
+			try {
+				registry = LocateRegistry.getRegistry(ip, 1099);
+				// Generate a unique processId.
+				processId = getMaxProcessID() + 1;
+				// Register into the RMI Registry.
+				registry.rebind(Integer.toString((getMaxProcessID() + 1)), this);
+				vectorClock.setProcessId(processId);
+			} catch (RemoteException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/*
-	 * Crate a buffer S, containing ProcessTimestamp (processId, V). Create a
-	 * vector clock V, assuming no of process is under 20
-	 */
-	public void init() {
-		S = new Vector<ProcessTimestamp>();
-		V = new Timestamp();
-		V.initToZeros(10);
 	}
 
 	/*
@@ -118,10 +113,11 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 
 			// while ( |{(m,k,Vm) in B | Dk(m)}| > 0 ) TODO what in heaven's
 			// name is k?
+			// k are all the other elements in the buffer.
 			boolean nothingToDeliver = false;
 			while (!nothingToDeliver) {
 				nothingToDeliver = true;
-				for (Message n : B) {
+				for (Message n : undeliveredMessages) {
 					if (deliveryPermitted(n)) {
 						nothingToDeliver = false;
 						// deliver such a message m
@@ -133,29 +129,22 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		}
 		// else add (m,j,Vm) to B
 		else {
-			B.add(m);
+			undeliveredMessages.add(m);
 			// System.out.println("Send to Buffer");
 		}
 	}
 
 	/*
 	 * Check if it is permitted to deliver Condition for delivery of message m
-	 * with accompanying buffer Sm in Pi 1. there does not exist (i,V) in Sm 2.
+	 * with accompanying buffer 'buffer' in Pi 1. there does not exist (i,V) in Sm 2.
 	 * or there does exist (i,V) in Sm and V <= Vi
 	 */
 	public boolean deliveryPermitted(Message m) {
-		boolean deliveryPermitted = true;
+		VectorClock expectedVectorClock = new VectorClock();
+		expectedVectorClock.values.addAll(vectorClock.values);
+		expectedVectorClock.incrementAt(m.vectorClock.getProcessId());
 
-		for (ProcessTimestamp pt : m.S) {
-			if (pt.getProcessId() == processId) {
-				if (V.isGreaterOrEqual(pt)) {
-					deliveryPermitted = false;
-					System.out.println(V.toString() + " " + pt.toString());
-				}
-			}
-		}
-
-		return deliveryPermitted;
+		return expectedVectorClock.isGreaterOrEqual(m.vectorClock);
 	}
 
 	/*
@@ -164,29 +153,29 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	public void send(String payload, int remoteProcessId) {
 		try {
 
-			// Increment timestamp before send event
-			V.incrementAt(processId);
+			// Increment our clock before sending
+			vectorClock.incrementAt(processId);
 
 			// send(m,S,V) to Pj
 			Message m = new Message();
 			m.setPayload(payload);
-			m.S = S;
-			m.V = V;
+			m.buffer = sentBuffer;
+			m.vectorClock = vectorClock;
 			IHandleRMI remoteProcess = (IHandleRMI) registry.lookup(Integer
 					.toString(remoteProcessId));
 			remoteProcess.transfer(m);
 
 			// delete any old element for Pj
-			for (int i = 0; i < S.size(); i++) {
-				if (S.get(i).getProcessId() == remoteProcessId) {
-					S.remove(i);
+			for (int i = 0; i < sentBuffer.size(); i++) {
+				if (sentBuffer.get(i).getProcessId() == remoteProcessId) {
+					sentBuffer.remove(i);
 				}
 			}
 
 			// insert(j,V) into S
 			ProcessTimestamp rpt = new ProcessTimestamp(remoteProcessId);
 			// TODO V.value == rpt.value Problem?
-			rpt.values = V.values;
+			rpt.values = vectorClock.values;
 
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -203,31 +192,31 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	public void deliver(Message m) {
 
 		// Increment timestamp before send event
-		V.incrementAt(processId);
+		vectorClock.incrementAt(processId);
 
 		// deliver(m) to P
-		reponseToDelivery(m.payload);
+		respondToDelivery(m.payload);
 		// for all ((j,V’) in Sm) do
-		for (ProcessTimestamp ptRemote : m.S) {
+		for (ProcessTimestamp ptRemote : m.buffer) {
 			// if (there exists (j,V’’) in S) then
 			boolean ptLocalExist = false;
 
-			for (int i = 0; i < S.size(); i++) {
-				if (S.get(i).getProcessId() == ptRemote.getProcessId()) {
+			for (int i = 0; i < sentBuffer.size(); i++) {
+				if (sentBuffer.get(i).getProcessId() == ptRemote.getProcessId()) {
 					ptLocalExist = true;
-					ProcessTimestamp merged = S.get(i);
+					ProcessTimestamp merged = sentBuffer.get(i);
 					// remove (j,V’’) from S
-					S.remove(i);
+					sentBuffer.remove(i);
 					// V’’:=max(V’,V’’)
 					merged.mergeWith(ptRemote);
 					// insert(j,V’’) into S
-					S.add(merged);
+					sentBuffer.add(merged);
 				}
 			}
 
 			// else insert(j,V’) into S
 			if (!ptLocalExist) {
-				S.add(ptRemote);
+				sentBuffer.add(ptRemote);
 			}
 		}
 
@@ -236,7 +225,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	/*
 	 * Response to the delivery of a message. For the fun, and (or) for testing
 	 */
-	public void reponseToDelivery(String payload) {
+	public void respondToDelivery(String payload) {
 		System.out.println("Process " + processId + " receives [" + payload
 				+ "]");
 		if (payload.contains("How are you today?")) {
@@ -355,9 +344,9 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 */
 	public void printBuffer_Timestamp() {
 		System.out.print("{");
-		for (ProcessTimestamp pt : S) {
+		for (ProcessTimestamp pt : sentBuffer) {
 			System.out.print(pt.toString());
 		}
-		System.out.println(V.toString() + "}");
+		System.out.println(vectorClock.toString() + "}");
 	}
 }

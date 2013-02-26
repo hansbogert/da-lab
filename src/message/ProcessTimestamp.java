@@ -2,7 +2,7 @@ package message;
 
 import java.util.Vector;
 
-public class ProcessTimestamp extends Timestamp {
+public class ProcessTimestamp extends VectorClock {
 	
 	private static final long serialVersionUID = -7441889085189603427L;
 	

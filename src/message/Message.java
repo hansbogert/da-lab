@@ -14,11 +14,11 @@ public class Message implements Serializable {
 	private static final long serialVersionUID = 616261230788353828L;
 	
 	public String payload;
-	public Vector<ProcessTimestamp> S;
-	public Timestamp V;
+	public Vector<ProcessTimestamp> buffer;
+	public VectorClock vectorClock;
 	
 	public Message() {
-		S = new Vector<ProcessTimestamp>();
+		buffer = new Vector<ProcessTimestamp>(); 
 	}
 	
 	public String getPayload() {

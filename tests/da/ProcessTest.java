@@ -2,11 +2,17 @@ package da;
 
 import static org.junit.Assert.*;
 
+import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 
+import message.Message;
+import message.VectorClock;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,6 +31,16 @@ public class ProcessTest {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@After
+	public void tearDown() {
+		try {
+			UnicastRemoteObject.unexportObject(registry, true);
+		} catch (NoSuchObjectException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 	}
 
 	@Test
@@ -50,7 +66,25 @@ public class ProcessTest {
 		}
 	}
 
-	/*public void testSend() {
+	@Test
+	public void testDeliver(){
+		try {
+			Process p1 = new Process();
+			p1.register("localhost");
+			
+			Message m = new Message();
+			m.payload = "1st!";
+			m.vectorClock = p1.vectorClock;
+			p1.deliver(m);
+			
+			assertEquals((int)p1.vectorClock.values.get(0),1);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void testSend() {
 		try {
 			Process p1 = new Process();
 			Process p2 = new Process();
@@ -64,6 +98,32 @@ public class ProcessTest {
 			e.printStackTrace();
 		}
 
-	}*/
+	}
 
+	@Test
+	public void testDeliveryPermitted() {
+		try {
+			Process p1;
+			{// make a process which has a vector clock of {1,0, 0, 0, ..}
+				p1 = new Process();
+				p1.vectorClock.incrementAt(2);
+			}
+
+			Message m;
+			VectorClock vc;
+			{// make a message for p1, originating from p2 which will have a
+				// vector clock of {0,2,0,0,0,0, ..}
+				m = new Message();
+				vc = new VectorClock();
+				vc.setProcessId(2);
+				vc.initToZeros(10);
+				vc.values.set(1,2);
+				m.vectorClock = vc;
+			}
+			assertTrue(p1.deliveryPermitted(m));
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }
