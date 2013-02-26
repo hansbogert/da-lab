@@ -43,7 +43,7 @@ public class StartProcess {
 			
 			//If Registry is not started, start it.
 			if(!isRegistryStarted)
-				{ registry = LocateRegistry.createRegistry(1299); }
+				{ registry = LocateRegistry.createRegistry(1099); }
 
 			//Start the process.
 			startProcess(registryIP);
@@ -72,7 +72,7 @@ public class StartProcess {
 		boolean isStarted = false;
 		
 		try {
-			registry = LocateRegistry.getRegistry(registryIP, 1299);
+			registry = LocateRegistry.getRegistry(registryIP, 1099);
 			if(!registry.list().equals(null))
 			{ isStarted = true;}
 			
