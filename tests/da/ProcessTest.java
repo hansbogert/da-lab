@@ -108,6 +108,7 @@ public class ProcessTest {
 			Process p1;
 			{// make a process which has a vector clock of {1,0, 0, 0, ..}
 				p1 = new Process();
+				p1.register("localhost");
 			}
 
 			Message m;
