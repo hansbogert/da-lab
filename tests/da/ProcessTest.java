@@ -108,7 +108,6 @@ public class ProcessTest {
 			Process p1;
 			{// make a process which has a vector clock of {1,0, 0, 0, ..}
 				p1 = new Process();
-				p1.vectorClock.incrementAt(1);
 			}
 
 			Message m;
@@ -119,10 +118,19 @@ public class ProcessTest {
 				vc = new VectorClock();
 				vc.setProcessId(2);
 				vc.initToZeros(10);
-				vc.values.set(1,2);
 				m.vectorClock = vc;
 			}
 			assertTrue(p1.deliveryPermitted(m));
+			
+			//introduce where this does not hold
+			VectorClock bufferVc = new VectorClock();
+			bufferVc.initToZeros(10);
+			bufferVc.incrementAt(1);
+			bufferVc.setProcessId(1);
+			
+			m.buffer.add(bufferVc);
+			
+			assertFalse(p1.deliveryPermitted(m));
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

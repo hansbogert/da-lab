@@ -140,12 +140,12 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * Sm 2. or there does exist (i,V) in Sm and V <= Vi
 	 */
 	public boolean deliveryPermitted(Message m) {
-		boolean deliveryPermitted = false;
+		boolean deliveryPermitted = true;
 
 		for (VectorClock vc : m.buffer) {
 			if (vc.getProcessId() == processId) {
-				if(vectorClock.isGreaterOrEqual(vc)){
-					deliveryPermitted = true;
+				if(vc.isGreaterOrEqual(vectorClock)){
+					deliveryPermitted = false;
 				}
 			}
 		}
