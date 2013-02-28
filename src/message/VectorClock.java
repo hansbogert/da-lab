@@ -72,7 +72,6 @@ public class VectorClock implements Serializable {
 				values.set(i, timestamp.values.get(i));
 			}
 		}
-
 	}
 
 	public String toString() {

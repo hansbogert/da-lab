@@ -20,41 +20,41 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 
 	private static final long serialVersionUID = -397296118682038104L;
 
-	ArrayList<Message> undeliveredMessages;
+	Vector<Message> undeliveredMessages;
 
 	int processId;
 
 	Registry registry;
 
-	Vector<ProcessTimestamp> sentBuffer;
+	Vector<VectorClock> sentBuffer;
 	VectorClock vectorClock;
 
 	/*
 	 * Process is a single component in the distributed system.
 	 */
 	public Process() throws RemoteException {
-		sentBuffer = new Vector<ProcessTimestamp>();
+		sentBuffer = new Vector<VectorClock>();
 		vectorClock = new VectorClock();
 		vectorClock.initToZeros(10);
+		undeliveredMessages = new Vector<Message>();
 	}
 
 	/*
 	 * Generate a unique process id and Register in the RMI Registry.
 	 */
 	void register(String ip) {
-			// Find the RMI Registry.
-			try {
-				registry = LocateRegistry.getRegistry(ip, 1099);
-				// Generate a unique processId.
-				processId = getMaxProcessID() + 1;
-				// Register into the RMI Registry.
-				registry.rebind(Integer.toString((getMaxProcessID() + 1)), this);
-				vectorClock.setProcessId(processId);
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
+		// Find the RMI Registry.
+		try {
+			registry = LocateRegistry.getRegistry(ip, 1099);
+			// Generate a unique processId.
+			processId = getMaxProcessID() + 1;
+			// Register into the RMI Registry.
+			registry.rebind(Integer.toString((getMaxProcessID() + 1)), this);
+			vectorClock.setProcessId(processId);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -136,15 +136,20 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 
 	/*
 	 * Check if it is permitted to deliver Condition for delivery of message m
-	 * with accompanying buffer 'buffer' in Pi 1. there does not exist (i,V) in Sm 2.
-	 * or there does exist (i,V) in Sm and V <= Vi
+	 * with accompanying buffer 'buffer' in Pi 1. there does not exist (i,V) in
+	 * Sm 2. or there does exist (i,V) in Sm and V <= Vi
 	 */
 	public boolean deliveryPermitted(Message m) {
-		VectorClock expectedVectorClock = new VectorClock();
-		expectedVectorClock.values.addAll(vectorClock.values);
-		expectedVectorClock.incrementAt(m.vectorClock.getProcessId());
+		boolean deliveryPermitted = false;
 
-		return expectedVectorClock.isGreaterOrEqual(m.vectorClock);
+		for (VectorClock vc : m.buffer) {
+			if (vc.getProcessId() == processId) {
+				if(vectorClock.isGreaterOrEqual(vc)){
+					deliveryPermitted = true;
+				}
+			}
+		}
+		return deliveryPermitted;
 	}
 
 	/*
@@ -197,14 +202,14 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		// deliver(m) to P
 		respondToDelivery(m.payload);
 		// for all ((j,V’) in Sm) do
-		for (ProcessTimestamp ptRemote : m.buffer) {
+		for (VectorClock ptRemote : m.buffer) {
 			// if (there exists (j,V’’) in S) then
 			boolean ptLocalExist = false;
 
 			for (int i = 0; i < sentBuffer.size(); i++) {
 				if (sentBuffer.get(i).getProcessId() == ptRemote.getProcessId()) {
 					ptLocalExist = true;
-					ProcessTimestamp merged = sentBuffer.get(i);
+					VectorClock merged = sentBuffer.get(i);
 					// remove (j,V’’) from S
 					sentBuffer.remove(i);
 					// V’’:=max(V’,V’’)
@@ -344,7 +349,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 */
 	public void printBuffer_Timestamp() {
 		System.out.print("{");
-		for (ProcessTimestamp pt : sentBuffer) {
+		for (VectorClock pt : sentBuffer) {
 			System.out.print(pt.toString());
 		}
 		System.out.println(vectorClock.toString() + "}");

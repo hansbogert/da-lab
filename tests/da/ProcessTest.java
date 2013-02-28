@@ -84,6 +84,7 @@ public class ProcessTest {
 		}
 	}
 
+	
 	public void testSend() {
 		try {
 			Process p1 = new Process();
@@ -92,6 +93,7 @@ public class ProcessTest {
 			p1.register("localhost");
 			p2.register("localhost");
 
+			assertEquals((int)p1.getProcessId(), 1);
 			p1.send("1", 2);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
@@ -106,7 +108,7 @@ public class ProcessTest {
 			Process p1;
 			{// make a process which has a vector clock of {1,0, 0, 0, ..}
 				p1 = new Process();
-				p1.vectorClock.incrementAt(2);
+				p1.vectorClock.incrementAt(1);
 			}
 
 			Message m;
