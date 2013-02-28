@@ -39,6 +39,33 @@ public class VectorClockTest {
 		assertFalse(greaterVc.isGreaterOrEqual(smallerOrEqualVc));
 
 	}
+	
+	@Test
+	public void testMergeWith()
+	{
+		VectorClock v1 = new VectorClock();
+		v1.initToZeros(10);
+		VectorClock v2 = new VectorClock();
+		v2.initToZeros(10);
+		
+		v1.incrementAt(1);
+		v1.incrementAt(2);
+		v1.incrementAt(2);
+		
+		v2.incrementAt(1);
+		v2.incrementAt(1);
+		v2.incrementAt(2);
+		
+		v1.mergeWith(v2);
+		
+		assertEquals(v1.getProcessTimeStamp(1), 2);
+		assertEquals(v1.getProcessTimeStamp(2), 2);
+		assertEquals(v1.getProcessTimeStamp(3), 0);
+		
+		assertEquals(v2.getProcessTimeStamp(1), 2);
+		assertEquals(v2.getProcessTimeStamp(2), 1);
+		assertEquals(v2.getProcessTimeStamp(3), 0);
+	}
 
 	@Test
 	public void testIncrementAt() {

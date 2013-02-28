@@ -6,7 +6,7 @@ import java.util.Vector;
 /*
  * Timestamp contains a vector clock that is used for synchronizing between processes.
  */
-public class VectorClock implements Serializable {
+public class VectorClock implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = 775137377950435498L;
 	private int processId;
@@ -32,6 +32,11 @@ public class VectorClock implements Serializable {
 	public void incrementAt(int processId) {
 		int next = values.get(processId - 1) + 1;
 		values.set(processId - 1, next);
+	}
+	
+	public int getProcessTimeStamp(int pid)
+	{
+		return values.get(pid -1 );
 	}
 
 	/*
@@ -79,5 +84,18 @@ public class VectorClock implements Serializable {
 		str += values;
 		return str;
 	}
+	
+	@Override
+	public VectorClock clone()
+	{
+		VectorClock vc = new VectorClock();
+		vc.processId = processId;
+		Vector<Integer> vb = (Vector<Integer>) values.clone();
+		vc.values = vb;
+		return vc;
+	}
 
+	public void setProcesId(int pid) {
+			this.processId = pid;
+	}
 }

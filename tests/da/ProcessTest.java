@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Vector;
 
 import message.Message;
 import message.VectorClock;
@@ -83,8 +84,42 @@ public class ProcessTest {
 			e.printStackTrace();
 		}
 	}
-
 	
+	@Test
+	public void testDeliverBuffer(){
+		try {
+			Process p1 = new Process();
+			p1.register("localhost");
+			Process p2 = new Process();
+			p2.register("localhost");
+			Process p3 = new Process();
+			p3.register("localhost");
+			
+			p1.send("1st", 3);
+			Vector<Integer> result = p1.sentBuffer.get(0).values;
+			Vector<Integer> expected = new Vector<Integer>(10);
+			expected.add(1);
+			for (int i = 0; i < 9; i++) {
+				expected.add(0);
+
+			}
+			assertEquals(expected, result);
+			
+			p1.send("1st", 2);
+			p2.send("2nd", 3);
+			p3.send("3rd", 1);
+			p2.send("4th", 3);
+			
+			//Vector<VectorClocks> p3Buffer = p3.sentBuffer
+			
+			
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Test
 	public void testSend() {
 		try {
 			Process p1 = new Process();
@@ -94,12 +129,58 @@ public class ProcessTest {
 			p2.register("localhost");
 
 			assertEquals((int)p1.getProcessId(), 1);
-			p1.send("1", 2);
+			p1.send("1ss", 2);
+			assertEquals( (int)p2.getVectorClock().getProcessTimeStamp(p2.getProcessId()), 1);
+			
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
+	}
+	
+	@Test
+	public void testSendWithBuffer()
+	{
+		try {
+			Process p1 = new Process();
+			Process p2 = new Process();
+			Process p3 = new Process();
+
+			p1.register("localhost");
+			p2.register("localhost");
+			p3.register("localhost");
+
+			p1.send("1st", 2);
+			assertEquals(p1.sentBuffer.size(), 1);
+			
+			p1.send("2nd", 2);
+			assertEquals(p1.sentBuffer.size(), 1);
+			int result = p1.sentBuffer.get(0).getProcessTimeStamp(1);
+			int pid = p1.sentBuffer.get(0).getProcessId();
+			//VectorClock expected = new VectorClock();
+			//expected.setProcesId(2);
+			//expected.incrementAt(1);
+			//expected.incrementAt(1);
+			assertEquals(result, 2);
+			assertEquals(pid, 2);
+			
+			p1.send("3rd", 3);
+			assertEquals(p1.sentBuffer.size(), 2);
+			result = p1.sentBuffer.get(1).getProcessTimeStamp(1);
+			int result1 = p1.sentBuffer.get(1).getProcessTimeStamp(2);
+			int result2 = p1.sentBuffer.get(1).getProcessTimeStamp(3);
+
+			pid = p1.sentBuffer.get(1).getProcessId();
+			assertEquals(result, 3);
+			assertEquals(result1, 0);
+			assertEquals(result2, 0);
+
+			assertEquals(pid, 3);
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Test

@@ -165,7 +165,11 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			Message m = new Message();
 			m.setPayload(payload);
 			m.buffer = sentBuffer;
-			m.vectorClock = vectorClock;
+			VectorClock messageVc = vectorClock.clone();
+			messageVc.setProcessId(remoteProcessId);
+			
+			m.vectorClock = messageVc;
+			
 			IHandleRMI remoteProcess = (IHandleRMI) registry.lookup(Integer
 					.toString(remoteProcessId));
 			remoteProcess.transfer(m);
@@ -178,10 +182,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			}
 
 			// insert(j,V) into S
-			ProcessTimestamp rpt = new ProcessTimestamp(remoteProcessId);
-			// TODO V.value == rpt.value Problem?
-			rpt.values = vectorClock.values;
-
+			sentBuffer.add(messageVc);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 
@@ -195,33 +196,35 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * Deliver a message.
 	 */
 	public void deliver(Message m) {
-
 		// Increment timestamp before send event
 		vectorClock.incrementAt(processId);
-
+		
+		//warning: not covered in slides
+		vectorClock.mergeWith(m.vectorClock);
+		
 		// deliver(m) to P
 		respondToDelivery(m.payload);
-		// for all ((j,V’) in Sm) do
-		for (VectorClock ptRemote : m.buffer) {
-			// if (there exists (j,V’’) in S) then
+		// for all ((j,V`) in Sm) do
+		for (VectorClock vcRemote : m.buffer) {
+			// if (there exists (j,V``) in S) then
 			boolean ptLocalExist = false;
 
 			for (int i = 0; i < sentBuffer.size(); i++) {
-				if (sentBuffer.get(i).getProcessId() == ptRemote.getProcessId()) {
+				if (sentBuffer.get(i).getProcessId() == vcRemote.getProcessId()) {
 					ptLocalExist = true;
 					VectorClock merged = sentBuffer.get(i);
-					// remove (j,V’’) from S
+					// remove (j,V``) from S
 					sentBuffer.remove(i);
-					// V’’:=max(V’,V’’)
-					merged.mergeWith(ptRemote);
-					// insert(j,V’’) into S
+					// V``:=max(V`,V``)
+					merged.mergeWith(vcRemote);
+					// insert(j,V``) into S
 					sentBuffer.add(merged);
 				}
 			}
 
-			// else insert(j,V’) into S
+			// else insert(j,V``) into S
 			if (!ptLocalExist) {
-				sentBuffer.add(ptRemote);
+				sentBuffer.add(vcRemote);
 			}
 		}
 
@@ -257,7 +260,6 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 				send(payload, remoteProcessId);
 			}
 		}
-
 	}
 
 	/*
@@ -344,6 +346,10 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		return processId;
 	}
 
+	public VectorClock getVectorClock()
+	{
+		return vectorClock;
+	}	
 	/*
 	 * Print buffer, timestamp.
 	 */
