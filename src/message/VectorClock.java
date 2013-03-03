@@ -33,10 +33,25 @@ public class VectorClock implements Serializable, Cloneable {
 		int next = values.get(processId - 1) + 1;
 		values.set(processId - 1, next);
 	}
-	
-	public int getProcessTimeStamp(int pid)
-	{
-		return values.get(pid -1 );
+
+	/**
+	 * Tests for equality with another vectorclock
+	 * 
+	 * @param
+	 * @return true if object is the same
+	 */
+	public boolean equals(Object o) {
+		boolean is = false;
+		if (o instanceof VectorClock) {
+			VectorClock vc = (VectorClock) o;
+			is = (vc.processId == processId && values.equals(vc.values));
+		}
+		return is;
+
+	}
+
+	public int getProcessTimeStamp(int pid) {
+		return values.get(pid - 1);
 	}
 
 	/*
@@ -80,14 +95,13 @@ public class VectorClock implements Serializable, Cloneable {
 	}
 
 	public String toString() {
-		String str = "";
+		String str = processId + ": ";
 		str += values;
 		return str;
 	}
-	
+
 	@Override
-	public VectorClock clone()
-	{
+	public VectorClock clone() {
 		VectorClock vc = new VectorClock();
 		vc.processId = processId;
 		Vector<Integer> vb = (Vector<Integer>) values.clone();
@@ -96,6 +110,6 @@ public class VectorClock implements Serializable, Cloneable {
 	}
 
 	public void setProcesId(int pid) {
-			this.processId = pid;
+		this.processId = pid;
 	}
 }

@@ -1,6 +1,9 @@
 package message;
 
 import java.util.Vector;
+
+
+import static org.hamcrest.CoreMatchers.*;
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -74,5 +77,22 @@ public class VectorClockTest {
 		result.incrementAt(1);
 		
 		assertEquals((int)result.values.get(0), 1);
+	}
+	
+	@Test
+	public void testEquals() {
+		VectorClock vc1 = new VectorClock();
+		VectorClock vc2 = new VectorClock();
+		
+		assertEquals(vc1, vc2);
+		
+		vc1.setProcesId(1);
+		
+		assertThat(vc1, is(not(vc2)));
+		vc2.setProcesId(1);
+		assertThat(vc1, is(vc2));
+		vc1.values.add(1);
+		vc2.values.add(1);
+		assertThat(vc1, is(vc2));
 	}
 }

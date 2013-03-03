@@ -109,8 +109,8 @@ public class ProcessTest {
 			p2.send("2nd", 3);
 			p3.send("3rd", 1);
 			p2.send("4th", 3);
-			
-			//Vector<VectorClocks> p3Buffer = p3.sentBuffer
+			System.out.println("break");
+			//Vector<VectorClock> p3Buffer = p3.sentBuffer
 			
 			
 		} catch (RemoteException e) {

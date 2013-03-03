@@ -28,4 +28,14 @@ public class Message implements Serializable {
 	public void setPayload(String payload){
 		this.payload = payload;
 	}
+	
+	@Override
+	public boolean equals(Object o){
+		boolean is = false;
+		if(o instanceof Message){
+			Message m = (Message) o;
+			is = (m.payload.equals(payload) && buffer.equals(m.buffer) && vectorClock.equals(m.vectorClock));
+		}
+		return is;
+	}
 }
