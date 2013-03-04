@@ -1,8 +1,5 @@
 package da2.message;
 
-import java.util.Vector;
-
-
 import static org.hamcrest.CoreMatchers.*;
 import org.junit.*;
 

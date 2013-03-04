@@ -60,7 +60,6 @@ public class StartProcess {
 		process = new Process();
 		process.register(registryIP);
 		process.broadcastRepeatedly(20);
-		process.talktoRandomProcessRepeatedly(10);
 	}
 
 	/*
