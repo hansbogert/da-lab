@@ -17,6 +17,16 @@ public class Message implements Serializable {
 	public Vector<VectorClock> buffer;
 	public VectorClock vectorClock;
 	
+	private long delay = 0;
+	
+	public long getDelay() {
+		return delay;
+	}
+
+	public void setDelay(long delay) {
+		this.delay = delay;
+	}
+
 	public Message() {
 		buffer = new Vector<VectorClock>(); 
 	}

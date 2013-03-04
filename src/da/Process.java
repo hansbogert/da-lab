@@ -98,7 +98,26 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * (only for fun) reply when receiving a random conversation.
 	 */
 	public void transfer(Message m) throws RemoteException {
-		receive(m);
+		
+		transfer(m, m.getDelay());
+		
+	}
+	
+	/*
+	 * When other remote processes call the transfer function, this process will
+	 * receive the parameter as the message. Then it prints out the payload, and
+	 * (only for fun) reply when receiving a random conversation.
+	 * 
+	 */
+	public void transfer(final Message m, long delay) throws RemoteException {
+		final ScheduledExecutorService service = Executors
+				.newSingleThreadScheduledExecutor();
+		service.schedule(new Runnable() {
+			@Override
+			public void run() {
+				receive(m);
+			}
+		}, delay,TimeUnit.MILLISECONDS);
 	}
 
 	/*
@@ -117,10 +136,12 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			boolean nothingToDeliver = false;
 			while (!nothingToDeliver) {
 				nothingToDeliver = true;
-				for (Message n : undeliveredMessages) {
+				for (int i=0; i< undeliveredMessages.size(); i++) {
+					Message n = undeliveredMessages.get(i);
 					if (deliveryPermitted(n)) {
 						nothingToDeliver = false;
 						// deliver such a message m
+						undeliveredMessages.remove(i);
 						deliver(n);
 					}
 				}
@@ -151,19 +172,26 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		}
 		return deliveryPermitted;
 	}
+	
+	public void send(String payload, int remoteProcess)
+	{
+		Message m = new Message();
+		m.setPayload(payload);
+		send(m, remoteProcess);
+	}
 
 	/*
 	 * Send a message.
 	 */
-	public void send(String payload, int remoteProcessId) {
+	public void send(Message m, int remoteProcessId) {
 		try {
 
 			// Increment our clock before sending
 			vectorClock.incrementAt(processId);
 
 			// send(m,S,V) to Pj
-			Message m = new Message();
-			m.setPayload(payload);
+			//Message m = new Message();
+			//m.setPayload(payload);
 			m.buffer = sentBuffer;
 			VectorClock messageVc = vectorClock.clone();
 			messageVc.setProcessId(remoteProcessId);
