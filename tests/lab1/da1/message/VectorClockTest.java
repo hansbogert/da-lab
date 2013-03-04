@@ -1,10 +1,12 @@
-package message;
+package da1.message;
 
 import java.util.Vector;
 
 
 import static org.hamcrest.CoreMatchers.*;
 import org.junit.*;
+
+import da1.message.VectorClock;
 import static org.junit.Assert.*;
 
 /**

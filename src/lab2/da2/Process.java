@@ -1,4 +1,4 @@
-package da;
+package da2;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -12,9 +12,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import message.Message;
-import message.ProcessTimestamp;
-import message.VectorClock;
+import da2.message.Message;
+import da2.message.VectorClock;
+
 
 public class Process extends UnicastRemoteObject implements IHandleRMI {
 

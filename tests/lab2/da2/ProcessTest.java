@@ -1,4 +1,4 @@
-package da;
+package da2;
 
 import static org.junit.Assert.*;
 
@@ -10,12 +10,14 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Vector;
 
-import message.Message;
-import message.VectorClock;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import da2.Process;
+import da2.message.Message;
+import da2.message.VectorClock;
 
 public class ProcessTest {
 	Registry registry;

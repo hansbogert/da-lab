@@ -1,4 +1,4 @@
-package message;
+package da1.message;
 
 import java.io.Serializable;
 import java.util.Vector;
