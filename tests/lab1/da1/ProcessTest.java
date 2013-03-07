@@ -131,11 +131,15 @@ public class ProcessTest {
 
 			assertEquals((int) p1.getProcessId(), 1);
 			p1.send("1ss", 2);
+			Thread.sleep(10);
 			assertEquals(
 					(int) p2.getVectorClock().getProcessTimeStamp(
 							p2.getProcessId()), 1);
 
 		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

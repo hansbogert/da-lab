@@ -129,6 +129,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		if (deliveryPermitted(m)) {
 			// deliver(m)
 			deliver(m);
+			System.out.println("Delivery Permitted and finished by Process " + processId);
 
 			// while ( |{(m,k,Vm) in B | Dk(m)}| > 0 ) TODO what in heaven's
 			// name is k?
@@ -143,6 +144,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 						// deliver such a message m
 						undeliveredMessages.remove(i);
 						deliver(n);
+						System.out.println("Delivery Permitted, Message removed from the buffer, by Process " + processId);
 					}
 				}
 			}
@@ -151,6 +153,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		// else add (m,j,Vm) to B
 		else {
 			undeliveredMessages.add(m);
+			System.out.println("Delivery Not Permitted, Message sent to buffer, by Process " + processId);
 			// System.out.println("Send to Buffer");
 		}
 	}

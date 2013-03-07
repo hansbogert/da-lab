@@ -25,14 +25,51 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 
 	private static final long serialVersionUID = -397296118682038104L;
 
+	/*
+	 * Critical section of this process
+	 */
+	public Object CS;
+	
 	int processId;
 
 	Registry registry;
+	
+	/*
+	 * An array RN with for every process the number of the last request they know about
+	 * Be updated when they receive a request.
+	 */
+	int[] RN;
+	
+	/*
+	 * If the token is present, this process can access its CS (or even all other CS's in the system).
+	 * If not, then token == null. 
+	 */
+	Token token;
 
+	/*
+	 * When some process is working in the CS, this should be true.
+	 * When it leaves the CS, this should be false;
+	 */
+	boolean isCSOccupied = false;
+	
+	//boolean isTokenPresent = false;;
+	
+	public boolean isTokenPresent()
+	{
+		return (token != null);
+	}
 	/*
 	 * Process is a single component in the distributed system.
 	 */
 	public Process() throws RemoteException {
+	}
+	
+	/*
+	 * Process is a single component in the distributed system.
+	 */
+	public Process(int maxProcessCount) throws RemoteException {
+		RN = new int[maxProcessCount];
+		CS = new Object();
 	}
 
 	/*
@@ -157,12 +194,87 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	
 	public void respondToToken(Token token)
 	{
+		this.token = token;
+		occupyCS();
+		doTrivialTasksInCS();
+		unoccupyCS();
+		//
+		token.setRequestNoAt(getRequestNoAt(processId), processId);
+		token.updateQueue(processId, RN);
+		if(token.getQueue().size() !=0)
+		{
+			int remoteProcessId = token.getQueue().peek();
+			MessagePackage m = new MessagePackage();
+			m.setMessage(token);
+			send(m, remoteProcessId);
+			token = null;
+		}
+		
+		
 		
 	}
 	
 	public void respondToRequest(Request request)
 	{
+		updateRequestAt(request.getProcessId(), request.getRequestNo());
 		
+		
+		if(isTokenPresent() && !isCSOccupied && isTokenBehind(request.getProcessId()))
+		{
+				MessagePackage m = new MessagePackage();
+				m.setMessage(token);
+				send(m, request.getProcessId());
+				token = null;
+		}
+	}
+	
+	public void occupyCS()
+	{
+		isCSOccupied = true;
+	}
+	
+	public void unoccupyCS()
+	{
+		isCSOccupied = false;
+	}
+	
+	public void doTrivialTasksInCS()
+	{
+		CS = new Object();
+	}
+	
+	public void incrementRequestAt(int processId)
+	{
+		int requestId = RN[processId - 1];
+		RN[processId - 1] = requestId + 1;
+	}
+	
+	public void updateRequestAt(int processId, int requestNo)
+	{
+		RN[processId - 1] = requestNo;
+	}
+	
+	public int getRequestNoAt(int processId)
+	{
+		return RN[processId - 1];
+	}
+	
+	public boolean isTokenBehind(int remoteProcessId)
+	{
+		return getRequestNoAt(remoteProcessId)>token.getRequestNoAt(remoteProcessId);
+	}
+	
+	public void broadcastRequest()
+	{
+		incrementRequestAt(processId);
+		String[] remoteProcesses = getRemoteProcesses();
+		// for all remote processes binded to the registry,
+		for (int i = 0; i < remoteProcesses.length; i++) {
+				Request request = new Request(processId, getRequestNoAt(processId));
+				MessagePackage m = new MessagePackage();
+				m.setMessage(request);
+				send(m, i);
+		}
 	}
 
 	/*

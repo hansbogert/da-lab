@@ -18,7 +18,6 @@ public class StartProcess {
 	Boolean isRegistryStarted;
 
 	public static void main(String[] args) {
-
 		StartProcess s = new StartProcess();
 		s.start();
 	}
