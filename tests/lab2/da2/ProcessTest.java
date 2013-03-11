@@ -1,14 +1,25 @@
-package da;
+package da2;
 
 import static org.junit.Assert.*;
 
+import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.Vector;
 
+
+import org.hamcrest.core.Is;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import da2.Process;
+import da2.message.MessagePackage;
+import da2.message.TextMessage;
+import da2.message.VectorClock;
 
 public class ProcessTest {
 	Registry registry;
@@ -23,6 +34,16 @@ public class ProcessTest {
 			// Start the process.
 
 		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@After
+	public void tearDown() {
+		try {
+			UnicastRemoteObject.unexportObject(registry, true);
+		} catch (NoSuchObjectException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -49,21 +70,20 @@ public class ProcessTest {
 			e.printStackTrace();
 		}
 	}
-
-	/*public void testSend() {
+	
+	@Test
+	public void testIsTokenPresent()
+	{
 		try {
 			Process p1 = new Process();
-			Process p2 = new Process();
-
-			p1.register("localhost");
-			p2.register("localhost");
-
-			p1.send("1", 2);
+			assertFalse(p1.isTokenPresent());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+	}
 
-	}*/
 
 }
+
