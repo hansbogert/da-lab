@@ -10,7 +10,6 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Vector;
 
-
 import org.hamcrest.core.Is;
 import org.junit.After;
 import org.junit.Before;
@@ -19,6 +18,7 @@ import org.junit.Test;
 import da2.Process;
 import da2.message.MessagePackage;
 import da2.message.TextMessage;
+import da2.message.Token;
 import da2.message.VectorClock;
 
 public class ProcessTest {
@@ -43,7 +43,6 @@ public class ProcessTest {
 		try {
 			UnicastRemoteObject.unexportObject(registry, true);
 		} catch (NoSuchObjectException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -52,9 +51,9 @@ public class ProcessTest {
 	public void testRegister() {
 
 		try {
-			Process p1 = new Process();
+			Process p1 = new Process(10);
 			p1.register("localhost");
-			Process p2 = new Process();
+			Process p2 = new Process(10);
 			p2.register("localhost");
 
 			assertEquals("new process should be 1", 1, p1.getProcessId());
@@ -66,24 +65,112 @@ public class ProcessTest {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Test
-	public void testIsTokenPresent()
-	{
+	public void testIsTokenPresent() {
 		try {
-			Process p1 = new Process();
+			Process p1 = new Process(10);
+			assertFalse(p1.isTokenPresent());
+
+			p1.setToken(new Token(10));
+			assertTrue(p1.isTokenPresent());
+
+			p1.removeToken();
 			assertFalse(p1.isTokenPresent());
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 
+	@Test
+	public void testUpdateRequestAt() {
+		try {
+			Process p1 = new Process(10);
+			p1.updateRequestAt(1, 1);
 
+			assertEquals(p1.getRequestNoAt(1), 1);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	@Test
+	public void testIncrementRequestAt() {
+		try {
+			Process p1 = new Process(10);
+			p1.updateRequestAt(1, 1);
+
+			assertEquals(p1.getRequestNoAt(1), 1);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testIsTokenBehind() {
+		try {
+			Process p1 = new Process(10);
+			p1.updateRequestAt(1, 1);
+
+			Token token = new Token(10);
+			p1.setToken(token);
+
+			assertTrue(p1.isTokenBehind(1));
+
+			// and if not?
+			p1.updateRequestAt(1, 0);
+			assertFalse(p1.isTokenBehind(1));
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testBroadcastRequestAndRespondToRequest() {
+
+		try {
+			Process p1 = new Process(10);
+			Process p2 = new Process(10);
+
+			p1.register("localhost");
+			p2.register("localhost");
+
+			p1.broadcastRequest();
+			assertEquals("Am i added with one", p1.getRequestNoAt(1), 1);
+
+			assertEquals("Is the remote also updated?", p2.getRequestNoAt(1), 1);
+
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testRespondToTokenIfTokenIsUpdated() {
+		try {
+			Process p1 = new Process(10);
+			Process p2 = new Process(10);
+
+			p1.register("localhost");
+			p2.register("localhost");
+
+			Token token = new Token(10);
+			// artificial situation injection, we requested, and got token
+			p1.updateRequestAt(1, 1);
+			p1.respondToToken(token);
+
+			assertEquals("Is Token updated?", token.getRequestNoAt(1), 1);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testRespondToTokenIf() {// TODO more tests needed
+
+	}
 }
-

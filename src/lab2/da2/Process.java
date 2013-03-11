@@ -41,17 +41,24 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	int[] RN;
 	
 	/*
-	 * If the token is present, this process can access its CS (or even all other CS's in the system).
-	 * If not, then token == null. 
-	 */
-	Token token;
-
-	/*
 	 * When some process is working in the CS, this should be true.
 	 * When it leaves the CS, this should be false;
 	 */
 	boolean isCSOccupied = false;
 	
+	/*
+	 * If the token is present, this process can access its CS (or even all other CS's in the system).
+	 * If not, then token == null. 
+	 */
+	Token token;
+
+	public Token getToken() {
+		return token;
+	}
+	public void setToken(Token token) {
+		this.token = token;
+	}
+
 	//boolean isTokenPresent = false;;
 	
 	public boolean isTokenPresent()
@@ -61,8 +68,8 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	/*
 	 * Process is a single component in the distributed system.
 	 */
-	public Process() throws RemoteException {
-	}
+//	public Process() throws RemoteException {
+//	}
 	
 	/*
 	 * Process is a single component in the distributed system.
@@ -84,7 +91,6 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			// Register into the RMI Registry.
 			registry.rebind(Integer.toString((getMaxProcessID() + 1)), this);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -148,7 +154,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * Deliver a message.
 	 */
 	public void deliver(MessagePackage m) {
-		respondToDelivery((TextMessage) m.getMessage());
+		respondToDelivery(m.getMessage());
 	}
 	
 	/*
@@ -194,7 +200,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	
 	public void respondToToken(Token token)
 	{
-		this.token = token;
+		setToken(token);
 		occupyCS();
 		doTrivialTasksInCS();
 		unoccupyCS();
@@ -207,11 +213,15 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			MessagePackage m = new MessagePackage();
 			m.setMessage(token);
 			send(m, remoteProcessId);
-			token = null;
+			removeToken();
 		}
 		
 		
 		
+	}
+	
+	public  void removeToken() {
+		setToken(null);
 	}
 	
 	public void respondToRequest(Request request)
@@ -273,7 +283,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 				Request request = new Request(processId, getRequestNoAt(processId));
 				MessagePackage m = new MessagePackage();
 				m.setMessage(request);
-				send(m, i);
+				send(m, Integer.parseInt(remoteProcesses[i]));
 		}
 	}
 

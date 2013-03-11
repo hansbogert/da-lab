@@ -41,7 +41,6 @@ public class ProcessTest {
 		try {
 			UnicastRemoteObject.unexportObject(registry, true);
 		} catch (NoSuchObjectException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -64,7 +63,6 @@ public class ProcessTest {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -82,7 +80,6 @@ public class ProcessTest {
 
 			assertEquals((int) p1.vectorClock.values.get(0), 1);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -115,7 +112,6 @@ public class ProcessTest {
 			// Vector<VectorClock> p3Buffer = p3.sentBuffer
 
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -137,10 +133,8 @@ public class ProcessTest {
 							p2.getProcessId()), 1);
 
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -184,7 +178,6 @@ public class ProcessTest {
 
 			assertEquals(pid, 3);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -220,7 +213,6 @@ public class ProcessTest {
 
 			assertFalse(p1.deliveryPermitted(m));
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -239,12 +231,11 @@ public class ProcessTest {
 			try {
 				Thread.sleep(2000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			System.out.println("just for break");
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 	}
@@ -288,10 +279,8 @@ public class ProcessTest {
 			// Assert that the console says the messages in order...
 
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -331,10 +320,8 @@ public class ProcessTest {
 			 */
 			Thread.sleep(300);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -380,10 +367,8 @@ public class ProcessTest {
 			 */
 			Thread.sleep(300);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

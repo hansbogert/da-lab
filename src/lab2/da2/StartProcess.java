@@ -56,7 +56,7 @@ public class StartProcess {
 	 * Start the process.
 	 */
 	public void startProcess(String registryIP) throws RemoteException {
-		process = new Process();
+		process = new Process(10);
 		process.register(registryIP);
 		process.broadcastRepeatedly(20);
 	}

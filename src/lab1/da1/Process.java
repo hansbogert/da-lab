@@ -52,7 +52,6 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			registry.rebind(Integer.toString((getMaxProcessID() + 1)), this);
 			vectorClock.setProcessId(processId);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -131,7 +130,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			deliver(m);
 			System.out.println("Delivery Permitted and finished by Process " + processId);
 
-			// while ( |{(m,k,Vm) in B | Dk(m)}| > 0 ) TODO what in heaven's
+			// while ( |{(m,k,Vm) in B | Dk(m)}| > 0 ) 
 			// name is k?
 			// k are all the other elements in the buffer.
 			boolean nothingToDeliver = false;
@@ -298,8 +297,6 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * is expected. For the fun, and (or) for testing.
 	 */
 	public void talktoRandomProcess() {
-		// printBuffer_Timestamp(); //TODO To be deleted
-
 		String[] remoteProcesses = getRemoteProcesses();
 		// for all remote processes binded to the registry,
 		if (remoteProcesses.length > 0) {
