@@ -11,6 +11,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.Vector;
 
 
+import org.hamcrest.core.Is;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +69,19 @@ public class ProcessTest {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	@Test
+	public void testIsTokenPresent()
+	{
+		try {
+			Process p1 = new Process();
+			assertFalse(p1.isTokenPresent());
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 
