@@ -51,6 +51,8 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * If not, then token == null. 
 	 */
 	Token token;
+	
+	int csDelayTime = 0;
 
 	public Token getToken() {
 		return token;
@@ -186,7 +188,8 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			respondToTextMessage((TextMessage) m);
 		}
 		else if( m instanceof Token) {
-			respondToToken((Token) m);
+			//respondToToken((Token) m);
+			respondToToken((Token) m, csDelayTime); //TODO, review, hack for artifical delay.
 		}
 		else if(m instanceof Request) {
 			respondToRequest((Request) m);
@@ -198,15 +201,42 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		System.out.println("Process " + processId + " receives [" + textMessage.getTextContent() + "]");
 	}
 	
+	public void respondToToken(Token token, int csDelayTime)
+	{
+		setToken(token);	//TODO review, dirty duplication code
+		occupyCS();		//TODO review, dirty duplication code
+		final Token incomingToken = token;
+		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		service.schedule(new Runnable() {
+			@Override
+			public void run() {
+				respondToToken(incomingToken);
+			}
+		}, csDelayTime,TimeUnit.MILLISECONDS);
+		csDelayTime = 0;
+	}
+	
 	public void respondToToken(Token token)
 	{
+			
+		//token_present <- true
+		//Place the token at local memory.
 		setToken(token);
+		
+		//Work on Critical Section.
 		occupyCS();
 		doTrivialTasksInCS();
 		unoccupyCS();
-		//
+		
+		//TN[i] <- N[i]
+		//When receiving the token, this process should have a higher request no than the one in the token.
+		//Set update the request number of this process on the token, with the latest request number of this process
+		//It means that the request from this process is satisfied.
 		token.setRequestNoAt(getRequestNoAt(processId), processId);
+		
+		//Update the queue on the token, remove this process from the beginning of the queue. Add new request at the end of the queue.
 		token.updateQueue(processId, RN);
+		//Send the token to next process.
 		if(token.getQueue().size() !=0)
 		{
 			int remoteProcessId = token.getQueue().peek();
@@ -214,6 +244,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 			m.setMessage(token);
 			send(m, remoteProcessId);
 			removeToken();
+			
 		}
 		
 		
@@ -226,15 +257,19 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	
 	public void respondToRequest(Request request)
 	{
+		//Update the request number of the process who sent the request.
 		updateRequestAt(request.getProcessId(), request.getRequestNo());
 		
-		
+		//If this process has the token,
+		//This process is not working in the critical section using the token.
+		//If the request is not already granted. <==> the request number on the token is behind.
 		if(isTokenPresent() && !isCSOccupied && isTokenBehind(request.getProcessId()))
 		{
 				MessagePackage m = new MessagePackage();
 				m.setMessage(token);
 				send(m, request.getProcessId());
-				token = null;
+				removeToken();
+				
 		}
 	}
 	
@@ -251,6 +286,11 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	public void doTrivialTasksInCS()
 	{
 		CS = new Object();
+	}
+	
+	public void setCSDelayTime(int delayTime)
+	{
+		csDelayTime = delayTime;
 	}
 	
 	public void incrementRequestAt(int processId)
@@ -276,9 +316,10 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	
 	public void broadcastRequest()
 	{
+		//Increment request number of this process.
 		incrementRequestAt(processId);
 		String[] remoteProcesses = getRemoteProcesses();
-		// for all remote processes binded to the registry,
+		// for all remote processes binded to the registry, broadcast the request
 		for (int i = 0; i < remoteProcesses.length; i++) {
 				Request request = new Request(processId, getRequestNoAt(processId));
 				MessagePackage m = new MessagePackage();
@@ -286,42 +327,33 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 				send(m, Integer.parseInt(remoteProcesses[i]));
 		}
 	}
-
-	/*
-	 * Send a broadcast to all processes binded to the registry. For the fun,
-	 * and (or) for testing.
-	 */
-	public void broadcast() {
-		String[] remoteProcesses = getRemoteProcesses();
-		// for all remote processes binded to the registry,
-		for (int i = 0; i < remoteProcesses.length; i++) {
-			// if it does not have the same name as this process,
-			if (Integer.parseInt(remoteProcesses[i]) != (processId)) {
-				System.out.println("Process " + processId
-						+ " sent a broadcast to Process " + remoteProcesses[i]);
-
-				String payload = "This is a broadcast from Process " + processId;
-				TextMessage t = new TextMessage(payload);
-				MessagePackage m = new MessagePackage();
-				m.setMessage(t);
-				int remoteProcessId = Integer.parseInt(remoteProcesses[i]);
-				send(m, remoteProcessId);
-			}
-		}
-	}
-
-	/*
-	 * Call broadcast() again and again. For the fun, and (or) for testing.
-	 */
-	public void broadcastRepeatedly(int timespan) {
-		final ScheduledExecutorService service = Executors
-				.newSingleThreadScheduledExecutor();
-		service.scheduleWithFixedDelay(new Runnable() {
+	
+	public void broadcastRequest(int rqDelayTime)
+	{
+		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		service.schedule(new Runnable() {
 			@Override
 			public void run() {
-				broadcast();
+				broadcastRequest();
 			}
-		}, 0, timespan, TimeUnit.SECONDS);
+		}, rqDelayTime,TimeUnit.MILLISECONDS);
+	}
+	
+	public String printRN()
+	{
+		String str = "[";
+		
+		if(RN.length>0)
+		{
+			str += RN[0];
+		}
+		
+		for(int i = 1; i<RN.length;i++)
+		{
+			str += "," + RN[i];
+		}
+		str += "]";
+		return str;
 	}
 
 

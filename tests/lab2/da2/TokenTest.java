@@ -36,4 +36,34 @@ public class TokenTest {
 		
 		assertEquals("is the diff between RN and LN added?",expected, token.getQueue()); 
 	}
+	
+	@Test
+	public void testPrintQueue() {
+		Token token = new Token(10);
+		
+		int[] rn = {1, 2, 3, 4, 5, 6,7, 8, 9, 10};
+		int[] ln = {1, 2, 3, 4, 5, 6, 7,  7, 7, 7};
+		
+		token.setLN(ln);
+		token.getQueue().add(1);
+		token.updateQueue(1, rn);
+		
+		
+		assertEquals("Printed Queue equals","[8,9,10]", token.printQueue()); 
+	}
+	
+	@Test
+	public void testPrintLN() {
+		Token token = new Token(10);
+		
+		int[] rn = {1, 2, 3, 4, 5, 6,7, 8, 9, 10};
+		int[] ln = {1, 2, 3, 4, 5, 6, 7,  7, 7, 7};
+		
+		assertEquals("Printed LN equals","[0,0,0,0,0,0,0,0,0,0]", token.printLN()); 
+		token.setLN(ln);
+		
+		assertEquals("Printed LN equals","[1,2,3,4,5,6,7,7,7,7]", token.printLN()); 
+	}
+	
+	
 }

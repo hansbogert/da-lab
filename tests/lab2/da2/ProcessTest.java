@@ -173,4 +173,23 @@ public class ProcessTest {
 	public void testRespondToTokenIf() {// TODO more tests needed
 
 	}
+	
+	@Test
+	public void testPrintLN() {
+		try {
+			Process p1 = new Process(10);
+	
+			p1.register("localhost");
+			
+			int[] rn = {1, 2, 3, 4, 5, 6,7, 8, 9, 10};
+			int[] ln = {1, 2, 3, 4, 5, 6, 7,  7, 7, 7};
+			
+			assertEquals("Printed RN equals","[0,0,0,0,0,0,0,0,0,0]", p1.printRN());
+			p1.broadcastRequest();
+			assertEquals("Printed RN equals","[1,0,0,0,0,0,0,0,0,0]", p1.printRN());
+			//assertEquals("Printed RN equals","[1,2,3,4,5,6,7,7,7,7]", p1.printRN()); 
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
 }
