@@ -169,10 +169,6 @@ public class ProcessTest {
 		}
 	}
 
-	@Test
-	public void testRespondToTokenIf() {// TODO more tests needed
-
-	}
 	
 	@Test
 	public void testPrintLN() {

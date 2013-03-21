@@ -96,7 +96,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * receive the parameter as the message. Then it prints out the payload, and
 	 * (only for fun) reply when receiving a random conversation.
 	 */
-	public void transfer(Message m) throws RemoteException {
+	public synchronized void transfer(Message m) throws RemoteException {
 		
 		transfer(m, m.getDelay());
 		
@@ -108,7 +108,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * (only for fun) reply when receiving a random conversation.
 	 * 
 	 */
-	public void transfer(final Message m, long delay) throws RemoteException {
+	public synchronized void transfer(final Message m, long delay) throws RemoteException {
 		final ScheduledExecutorService service = Executors
 				.newSingleThreadScheduledExecutor();
 		service.schedule(new Runnable() {

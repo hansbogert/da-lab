@@ -64,7 +64,7 @@ public class AlgorithmTest {
 		
 		<------------ Time 0 TestCase 2
 		
-		p1 requests (and workin CS for 200ms);
+		p1 requests (and working CS for 200ms);
 		p3 requests
 		
 		<------------ Time 0 TestCase 3
@@ -145,17 +145,21 @@ public class AlgorithmTest {
 			//In the mean time, p2 and p3 broadcasts request, but the request from p2 is 100 millisecond later.
 			p2.broadcastRequest(100);
 			p3.broadcastRequest();
+			p1.broadcastRequest();
 			
 			//After 0 millisecond. Test Case 3
 			//All receives requests from p1 and p3, and previously p2.
 			//P1 still have the token, because it is working in CS.
-			Thread.sleep(1);	//Need to wait for very short time, for example 1 ms, as the scheduler will have short delay even if the delay is set to 0;
-			assertEquals("Printed RN equals","[1,1,1,0,0,0,0,0,0,0]", p1.printRN());
-			assertEquals("Printed RN equals","[1,1,1,0,0,0,0,0,0,0]", p2.printRN());
-			assertEquals("Printed RN equals","[1,1,1,0,0,0,0,0,0,0]", p3.printRN());
+			Thread.sleep(5);	//Need to wait for very short time, for example 1 ms, as the scheduler will have short delay even if the delay is set to 0;
+			
 			assertTrue(p1.isTokenPresent());
 			assertFalse(p2.isTokenPresent());
 			assertFalse(p3.isTokenPresent());
+			assertEquals("Printed RN equals","[2,1,1,0,0,0,0,0,0,0]", p1.printRN());
+			assertEquals("Printed RN equals","[2,1,1,0,0,0,0,0,0,0]", p2.printRN());
+			assertEquals("Printed RN equals","[2,1,1,0,0,0,0,0,0,0]", p3.printRN());
+			assertEquals("Printed Token LN equals","[0,1,0,0,0,0,0,0,0,0]", p1.getToken().printLN());
+
 			
 			//-------------------------------------------------------------------------------//
 			
@@ -165,14 +169,14 @@ public class AlgorithmTest {
 			//Token is not updated (only request from p2 is granted).
 			//P1 still have the token, because it is working in CS.
 			Thread.sleep(150);
-			assertEquals("Printed RN equals","[1,2,1,0,0,0,0,0,0,0]", p1.printRN());
-			assertEquals("Printed RN equals","[1,2,1,0,0,0,0,0,0,0]", p2.printRN());
-			assertEquals("Printed RN equals","[1,2,1,0,0,0,0,0,0,0]", p3.printRN());
+			assertEquals("Printed RN equals","[2,2,1,0,0,0,0,0,0,0]", p1.printRN());
+			assertEquals("Printed RN equals","[2,2,1,0,0,0,0,0,0,0]", p2.printRN());
+			assertEquals("Printed RN equals","[2,2,1,0,0,0,0,0,0,0]", p3.printRN());
 			assertTrue(p1.isTokenPresent());
 			assertFalse(p2.isTokenPresent());
 			assertFalse(p3.isTokenPresent());
 			assertEquals("Printed Token LN equals","[0,1,0,0,0,0,0,0,0,0]", p1.getToken().printLN());
-			assertEquals("Printed Token Quene equals","[]", p1.getToken().printQueue());
+			assertEquals("Printed Token Quene equals","[1]", p1.getToken().printQueue());
 			
 			//-------------------------------------------------------------------------------//
 			//After 150+100 = 250 millisecond  Test Case 5
@@ -186,7 +190,7 @@ public class AlgorithmTest {
 			Thread.sleep(100);
 			assertTrue(p2.isTokenPresent());
 			assertEquals("Printed Token Queue equals","[2,3]", p2.getToken().printQueue());
-			assertEquals("Printed Token RN equals","[1,2,1,0,0,0,0,0,0,0]", p2.printRN());
+			assertEquals("Printed Token RN equals","[2,2,1,0,0,0,0,0,0,0]", p2.printRN());
 			assertEquals("Printed Token LN equals","[1,1,0,0,0,0,0,0,0,0]", p2.getToken().printLN());
 			
 			//-------------------------------------------------------------------------------//
@@ -197,8 +201,8 @@ public class AlgorithmTest {
 			//P3 is working in CS
 			Thread.sleep(200);
 			assertTrue(p3.isTokenPresent());
-			assertEquals("Printed Token Queue equals","[3]", p3.getToken().printQueue());
-			assertEquals("Printed Token RN equals","[1,2,1,0,0,0,0,0,0,0]", p3.printRN());
+			assertEquals("Printed Token Queue equals","[3,1]", p3.getToken().printQueue());
+			assertEquals("Printed Token RN equals","[2,2,1,0,0,0,0,0,0,0]", p3.printRN());
 			assertEquals("Printed Token LN equals","[1,2,0,0,0,0,0,0,0,0]", p3.getToken().printLN());			
 			
 			//-------------------------------------------------------------------------------//
@@ -208,16 +212,21 @@ public class AlgorithmTest {
 			//P3 updated the LN on the token.
 			//P3 updated the queue on the token. There are no request left in the queue. Queue becomes empty.
 			Thread.sleep(400);
-			assertEquals("Printed Token Queue equals","[]", p3.getToken().printQueue());
-			assertEquals("Printed Token RN equals","[1,2,1,0,0,0,0,0,0,0]", p3.printRN());
-			assertEquals("Printed Token LN equals","[1,2,1,0,0,0,0,0,0,0]", p3.getToken().printLN());
+			assertEquals("Printed Token Queue equals","[1]", p1.getToken().printQueue());
+			assertEquals("Printed Token RN equals","[2,2,1,0,0,0,0,0,0,0]", p1.printRN());
+			assertEquals("Printed Token LN equals","[1,2,1,0,0,0,0,0,0,0]", p1.getToken().printLN());
+			
+			//1050millisecond
+			Thread.sleep(200);
+			assertEquals("Printed Token Queue equals","[]", p1.getToken().printQueue());
+			assertEquals("Printed Token RN equals","[2,2,1,0,0,0,0,0,0,0]", p1.printRN());
+			assertEquals("Printed Token LN equals","[2,2,1,0,0,0,0,0,0,0]", p1.getToken().printLN());
 
 			//-------------------------------------------------------------------------------//
 			Thread.sleep(1000);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
