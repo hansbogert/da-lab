@@ -176,7 +176,7 @@ public class AlgorithmTest {
 			
 			//-------------------------------------------------------------------------------//
 			//After 150+100 = 250 millisecond  Test Case 5
-			//P1 is done with CS, than it should update the queue in the token.
+			//P1 is done with CS, then it should update the queue in the token.
 			//Set CS delay to p2 and p3.
 			//P2 received the token.
 			//P2 is still working in the CS.
@@ -191,7 +191,7 @@ public class AlgorithmTest {
 			
 			//-------------------------------------------------------------------------------//
 			
-			//AFter 250+200 = 450 millisecond  Test Case 6
+			//After 250+200 = 450 millisecond  Test Case 6
 			//P2 is done
 			//P3 has token
 			//P3 is working in CS
@@ -221,7 +221,4 @@ public class AlgorithmTest {
 			e.printStackTrace();
 		}
 	}
-	
-	
-
 }
