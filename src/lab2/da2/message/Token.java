@@ -85,7 +85,7 @@ public class Token extends Message {
 
 		for (int i = 0; i < processesCount; i++) {
 
-			if (RN[i] != LN[i]) { // TODO:review shouldnt this be inequality of rn>ln? Because in no way ln<rn, that's why doesn't matter
+			if (RN[i] > LN[i]) {
 				// because the queue starts at 0, process 1 stored in 0.
 				int pid = i + 1;
 				
@@ -95,11 +95,7 @@ public class Token extends Message {
 				}
 			}
 		}
-		// TODO: reviewed, can be removed, this block below was IN the loop, so it was happily
-		// removing every round. I imagine this was not intended. (see diff for
-		// original code) //Stupid bug, you are right.
 		
-		assert (q.peek() == processId); //TODO review, assert not working :P
 		// remove itself from the queue, if it is in the quene
 		if(q.peek() != null && q.peek() == processId)
 		{

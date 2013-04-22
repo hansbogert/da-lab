@@ -141,7 +141,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 	 * When other remote processes call the transfer function, this process will
 	 * receive the parameter as the message.
 	 */
-	public void transfer(MessagePackage m) throws RemoteException {
+	public synchronized void transfer(MessagePackage m) throws RemoteException {
 		receive(m);		
 	}
 
@@ -232,7 +232,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		//When receiving the token, this process should have a higher request no than the one in the token.
 		//Set update the request number of this process on the token, with the latest request number of this process
 		//It means that the request from this process is satisfied.
-		token.setRequestNoAt(getRequestNoAt(processId), processId);
+		token.setRequestNoAt(token.getRequestNoAt(processId)+1, processId);
 		
 		//Update the queue on the token, remove this process from the beginning of the queue. Add new request at the end of the queue.
 		token.updateQueue(processId, RN);
@@ -265,6 +265,7 @@ public class Process extends UnicastRemoteObject implements IHandleRMI {
 		//If the request is not already granted. <==> the request number on the token is behind.
 		if(isTokenPresent() && !isCSOccupied && isTokenBehind(request.getProcessId()))
 		{
+				token.updateQueue(processId, RN);
 				MessagePackage m = new MessagePackage();
 				m.setMessage(token);
 				send(m, request.getProcessId());

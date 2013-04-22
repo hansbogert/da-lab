@@ -354,7 +354,7 @@ public class ProcessTest {
 			 * Message m2 sending
 			 */
 			p1.send("System testcase3: 2nd, but I should be faster than m1", 3);
-			
+			Thread.sleep(5);
 			/**
 			 * Message m3 sending
 			 */

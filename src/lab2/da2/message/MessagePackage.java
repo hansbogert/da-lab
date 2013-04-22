@@ -43,7 +43,7 @@ public class MessagePackage implements Serializable {
 	public boolean equals(Object o){
 		boolean is = false;
 		if(o instanceof MessagePackage){
-			MessagePackage m = (MessagePackage) o; //TODO (m.message.equals(m.message) if this is bug, also change in da1. // Why would this be a bug?
+			MessagePackage m = (MessagePackage) o;
 			is = (message.equals(m.message) && buffer.equals(m.buffer) && vectorClock.equals(m.vectorClock));
 		}
 		return is;
