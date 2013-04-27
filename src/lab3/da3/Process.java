@@ -2,6 +2,9 @@ package da3;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import da3.message.PayloadMessage;
 
@@ -11,10 +14,15 @@ public class Process {
 	private int processId;
 	private Synchronizer synchronizer;
 	private ArrayList<Integer> neigbourProcessIds;
+	private ArrayList<PayloadMessage> inMessages;
+	private ArrayList<PayloadMessage> inMessagesPreviousRound;
+	private boolean allMessagesSent;
+	
 	/*
 	 * Process is a single component in the distributed system.
 	 */
 	public Process(){
+		
 		try {
 			
 			Synchronizer synchronizer = new Synchronizer(this);
@@ -23,6 +31,10 @@ public class Process {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
+		
+		neigbourProcessIds = new ArrayList<Integer>();
+		inMessages = new ArrayList<PayloadMessage>();
+		inMessagesPreviousRound = new ArrayList<PayloadMessage>();
 	}
 
 	/*
@@ -33,12 +45,64 @@ public class Process {
 	}
 	
 	public void receive(PayloadMessage pMessage) {
-		//TODO
+		inMessages.add(pMessage);
 	}
 	
-	public boolean allMessagesSent()
+	public void progressToNextRound()
 	{
-		return true;
+		setAllMessagesSent(false);
+		
+		inMessagesPreviousRound = inMessages;
+		inMessages.clear();
+		
+		doSomeCalculation();
+		
+		for(PayloadMessage pMessage : inMessagesPreviousRound)
+		{
+			processInMessages(pMessage);
+		}
+		
+		setAllMessagesSent(true);
+		
+		
+		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		service.schedule(new Runnable() {
+			@Override
+			public void run() {
+				synchronizer.regulateSafety();
+				synchronizer.regulateProgress();
+			}
+		}, 0,TimeUnit.MILLISECONDS);
+
+
+	}
+	
+	public void processInMessages(PayloadMessage pMessage)
+	{
+		
+	}
+	
+	public void send(PayloadMessage pMessage)
+	{
+		synchronizer.send(pMessage);
+	}
+	
+	public void doSomeCalculation()
+	{
+//		try {
+//			Thread.sleep(10);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+	}
+	
+	public void startRounds()
+	{
+		setAllMessagesSent(true);
+		
+		synchronizer.regulateSafety();
+		synchronizer.regulateProgress();
 	}
 	
 	public void setProcessId(int processId) {
@@ -57,7 +121,13 @@ public class Process {
 		this.synchronizer = synchronizer;
 	}
 	
+	public boolean isAllMessagesSent() {
+		return allMessagesSent;
+	}
 
+	public void setAllMessagesSent(boolean allMessagesSent) {
+		this.allMessagesSent = allMessagesSent;
+	}
 	
 
 

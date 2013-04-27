@@ -3,21 +3,19 @@ package da3;
 import static org.junit.Assert.*;
 
 import java.rmi.NoSuchObjectException;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Vector;
 
-import org.hamcrest.core.Is;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import da3.Process;
+import da3.message.PayloadMessage;
 
-public class ProcessTest {
+public class SynchronizerTest {
+	
 	Registry registry;
 
 	@Before
@@ -43,31 +41,33 @@ public class ProcessTest {
 		}
 	}
 
+
 	@Test
-	public void testRegister() {
-
+	public void testSynchronizer() {
 		try {
+			//-------------------------------------------------------------------------------//
+			//Initialize 3 processes  
 			Process p1 = new Process();
-			p1.register("localhost");
 			Process p2 = new Process();
+			Process p3 = new Process();
+			p1.register("localhost");
 			p2.register("localhost");
+			p3.register("localhost");
+			
+			//PayloadMessage m1 = new PayloadMessage(p1.getSynchronizer().getRoundId(), p1.getProcessId(), 2);
+			//p1.send(m1);
+			
+			p1.startRounds();
+			p2.startRounds();
+			p3.startRounds();
+			
+			Thread.sleep(20000);
+			assertEquals("RoundNumber P1: ", 0, p1.getSynchronizer().getRoundId());
+			
 
-			assertEquals("new process should be 1", 1, p1.getProcessId());
-			assertEquals("new process should be 2", 2, p2.getProcessId());
-
-			assertNotNull(registry.lookup(Integer.toString(1)));
-			assertNotNull(registry.lookup(Integer.toString(2)));
-
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (NotBoundException e) {
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-	}
-
-	@Test
-	public void testIsTokenPresent() {
-
 	}
 
 }
