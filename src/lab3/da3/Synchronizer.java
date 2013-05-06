@@ -36,8 +36,8 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 	private ArrayList<Safe> receivedSafes;
 	
 	
-	public boolean synchronizerDiagnotics = true;
-	public boolean byzantineDiagnotics = false;
+	public boolean synchronizerDiagnotics = false;
+	public boolean byzantineDiagnotics = true;
 	
 	public Synchronizer(Process process) throws RemoteException  {
 		this.process = process;
@@ -116,6 +116,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 			IHandleRMI remoteSynchronizer = (IHandleRMI) registry.lookup(Integer.toString(pMessage.getReceiveProcessId()));
 			if(synchronizerDiagnotics | byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " tries to send :" + pMessage.toString());}
 			remoteSynchronizer.transfer(pMessage);
+			unackedMessages.add(pMessage);
 		} catch (RemoteException | NotBoundException e) {
 			e.printStackTrace();
 		}
@@ -126,12 +127,12 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 		
 		if(pMessage.getRoundId()==roundId)
 		{
-			//if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " delivers :" + pMessage.toString() + "directly"  + " at round " + getRoundId());}
+			if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " delivers :" + pMessage.toString() + " directly"  + " at round " + getRoundId());}
 			process.receive(pMessage);
 		}
 		else
 		{
-			//if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " buffers :" + pMessage.toString() + " at round " + getRoundId());}
+			if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " buffers :" + pMessage.toString() + " at round " + getRoundId());}
 			bufferedIncomingMessages.add(pMessage);
 		}
 		Ack ack = new Ack(roundId, process.getProcessId(), pMessage.getSentProcessId(), pMessage.getMessageId());
@@ -148,14 +149,8 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 				unackedMessages.remove(i);
 			}
 		}
-		
-		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
-			@Override
-			public void run() {
-				regulateSafety("Received a Ack");
-			}
-		}, 0,TimeUnit.MILLISECONDS);
+
+		regulateSafety("Received a Ack");
 
 	}
 	
@@ -172,14 +167,8 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 	public synchronized void receive(Safe safe) {
 		if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " receives :" + safe.toString());}
 		
-			if((safe.getRoundId() - getRoundId()) != 0 && (safe.getRoundId() - getRoundId()) != 1)
-			{
-				if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " safe with ridiculous roundid "+ safe.getRoundId() + " at round "+ getRoundId());}	
-			}
-		
 		if(safe.getRoundId() > getRoundId())
 		{
-			if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " safe with roundId: "+ safe.getRoundId() + " added to buffer at round "+ getRoundId());}
 			bufferedSafesNextRound.add(safe);
 		}
 		else
@@ -187,13 +176,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 			receivedSafes.add(safe);
 		}
 
-		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
-			@Override
-			public void run() {
-				regulateProgress("safe retrieved");
-			}
-		}, 0,TimeUnit.MILLISECONDS);
+		regulateProgress("safe retrieved");
 		
 	}
 	
@@ -203,6 +186,11 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 		
 		if(isSafe())
 		{
+			if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " unackedMessage.Size " + unackedMessages.size());}
+			if(byzantineDiagnotics){
+				for(PayloadMessage un : unackedMessages)
+				System.out.println("Process " + process.getProcessId() + " unackedMessageNo " + un.getMessageId());
+				}
 			if(getRoundSafety() < getRoundId())
 			{
 				if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " is safe at Round " + roundId);}
@@ -223,7 +211,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 			{
 				IHandleRMI remoteSynchronizer = (IHandleRMI) registry.lookup(Integer.toString(i));
 				Safe safe = new Safe(roundId, process.getProcessId(), i);
-				if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " tries to send :" + safe.toString());}
+				if(synchronizerDiagnotics | byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " tries to send :" + safe.toString());}
 				remoteSynchronizer.transfer(safe);
 			}
 
@@ -243,7 +231,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 		
 		for(PayloadMessage uMessage : unackedMessages)
 		{
-			if(uMessage.getRoundId() >= roundId)
+			if(uMessage.getRoundId() <= getRoundId())
 			{
 				isSafe = false;
 			}
@@ -279,7 +267,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 		if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " regulate progress at round " + getRoundId() + " because of " + reason);}
 		if(canProgress())
 		{
-			if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " progress to round " + (getRoundId() + 1));}
+			if(synchronizerDiagnotics | byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " progress to round " + (getRoundId() + 1));}
 			progressToNexRound();
 		}
 	}
@@ -325,9 +313,9 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 		setRoundId(getRoundId()+1);
 		process.progressToNextRound();
 		//unbox buffered safes which are meant for this round but retrieved at previous round
-		if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " before receivedSafes.Size=" + receivedSafes.size());}				
+		//if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " before receivedSafes.Size=" + receivedSafes.size());}				
 		receivedSafes = bufferedSafesNextRound;
-		if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " after receivedSafes.Size=" + receivedSafes.size());}				
+		//if(synchronizerDiagnotics){System.out.println("Process " + process.getProcessId() + " after receivedSafes.Size=" + receivedSafes.size());}				
 		
 		bufferedSafesNextRound = new ArrayList<Safe>();
 		
@@ -336,7 +324,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 		{
 			if(pMessage.getRoundId() == roundId)
 			{
-				//if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " delivers :" + pMessage.toString() + "from buffer" + " at round " + getRoundId());}
+				if(byzantineDiagnotics){System.out.println("Process " + process.getProcessId() + " delivers :" + pMessage.toString() + "from buffer" + " at round " + getRoundId());}
 				process.receive(pMessage);
 			}
 		}
