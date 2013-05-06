@@ -13,9 +13,7 @@ public class Process {
 
 	private int processId;
 	private Synchronizer synchronizer;
-	private ArrayList<Integer> neigbourProcessIds;
-	private ArrayList<PayloadMessage> inMessages;
-	private ArrayList<PayloadMessage> inMessagesPreviousRound;
+	private ArrayList<PayloadMessage> outMessageNextRound;
 	private boolean allMessagesSent;
 	
 	/*
@@ -32,9 +30,7 @@ public class Process {
 			e.printStackTrace();
 		}
 		
-		neigbourProcessIds = new ArrayList<Integer>();
-		inMessages = new ArrayList<PayloadMessage>();
-		inMessagesPreviousRound = new ArrayList<PayloadMessage>();
+		outMessageNextRound = new ArrayList<PayloadMessage>();
 	}
 
 	/*
@@ -45,22 +41,19 @@ public class Process {
 	}
 	
 	public void receive(PayloadMessage pMessage) {
-		inMessages.add(pMessage);
+		processByzantineMessage(pMessage);
 	}
 	
 	public void progressToNextRound()
 	{
 		setAllMessagesSent(false);
 		
-		inMessagesPreviousRound = inMessages;
-		inMessages.clear();
-		
-		doSomeCalculation();
-		
-		for(PayloadMessage pMessage : inMessagesPreviousRound)
+		//Send outgoing Messages generated in previous round but should be sent in this round.
+		for(PayloadMessage pMessage : outMessageNextRound)
 		{
-			processInMessages(pMessage);
+			send(pMessage);
 		}
+		outMessageNextRound.clear();
 		
 		setAllMessagesSent(true);
 		
@@ -74,37 +67,40 @@ public class Process {
 				synchronizer.regulateProgress();
 			}
 		}, 0,TimeUnit.MILLISECONDS);
-
-
 	}
 	
-	public void processInMessages(PayloadMessage pMessage)
-	{
-		
-	}
 	
 	public void send(PayloadMessage pMessage)
 	{
 		synchronizer.send(pMessage);
 	}
 	
-	public void doSomeCalculation()
-	{
-//		try {
-//			Thread.sleep(10);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-	}
-	
 	public void startRounds()
 	{
-		setAllMessagesSent(true);
-		
-		synchronizer.regulateSafety();
-		synchronizer.regulateProgress();
+		synchronizer.progressToNexRound();
 	}
+	
+	public void initByzantineAlgorithm()
+	{
+		ArrayList<Integer> neighboursIds = synchronizer.getRemoteProcessIds();
+		for(Integer i : neighboursIds)
+		{
+			PayloadMessage pMessageOut = new PayloadMessage(synchronizer.getRoundId()+1, processId, i);
+			pMessageOut.randomAdditiveNumber = i;
+			outMessageNextRound.add(pMessageOut);
+		}
+
+	}
+	
+	public void processByzantineMessage(PayloadMessage pMessage)
+	{
+		int nextRoundId = synchronizer.getRoundId() + 1;
+		
+		PayloadMessage pMessageOut = new PayloadMessage(nextRoundId, processId, pMessage.getSentProcessId());
+		pMessageOut.randomAdditiveNumber = pMessage.randomAdditiveNumber + 10;
+		outMessageNextRound.add(pMessageOut);
+	}
+
 	
 	public void setProcessId(int processId) {
 		this.processId = processId;

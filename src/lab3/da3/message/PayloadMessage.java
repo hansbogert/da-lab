@@ -5,6 +5,7 @@ public class PayloadMessage extends Message {
 	private static final long serialVersionUID = 4321388220582463184L;
 	
 	private int messageId;
+	public int randomAdditiveNumber;
 	
 	public PayloadMessage(int roundId, int processId, int receiveProcessId)
 	{
@@ -21,6 +22,6 @@ public class PayloadMessage extends Message {
 
 	public String toString()
 	{
-		return "Payload [Round " + getRoundId() + ", SendProcess " + getSentProcessId() + ", ReceiveProcess " + getReceiveProcessId() + ", Message " + getMessageId() + "]";
+		return "Payload [Round " + getRoundId() + ", SendProcess " + getSentProcessId() + ", ReceiveProcess " + getReceiveProcessId() + ", Message " + getMessageId() + ", RandomAddNo " + randomAdditiveNumber +"]";
 	}
 }

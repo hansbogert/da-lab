@@ -105,6 +105,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 			currentMessageId++;
 			pMessage.setMessageId(currentMessageId);
 			IHandleRMI remoteSynchronizer = (IHandleRMI) registry.lookup(Integer.toString(pMessage.getReceiveProcessId()));
+			System.out.println("Process " + process.getProcessId() + " tries to send :" + pMessage.toString());
 			remoteSynchronizer.transfer(pMessage);
 		} catch (RemoteException | NotBoundException e) {
 			e.printStackTrace();
@@ -266,7 +267,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 		}
 		
 		//TODO Just to stop the process after certain rounds
-		if(roundId >= 20)
+		if(roundId >= 10)
 		{
 			canProgress = false;
 		}
@@ -278,7 +279,6 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 
 		roundId++;
 		process.progressToNextRound();
-		
 		//unbox buffered safes which are meant for this round but retrieved at previous round
 		receivedSafes = bufferedSafesNextRound;
 		//clear the safes buffer.
