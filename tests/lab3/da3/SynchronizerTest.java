@@ -55,8 +55,8 @@ public class SynchronizerTest {
 			p1.startRounds();
 			p2.startRounds();
 			
-			Thread.sleep(2000);
-			assertEquals("RoundNumber P1: ", 10, p1.getSynchronizer().getRoundId());
+			Thread.sleep(10000);
+			assertEquals("RoundNumber P1: ", 30, p1.getSynchronizer().getRoundId());
 			
 
 		} catch (InterruptedException e) {
@@ -80,12 +80,13 @@ public class SynchronizerTest {
 			//PayloadMessage m1 = new PayloadMessage(p1.getSynchronizer().getRoundId(), p1.getProcessId(), 2);
 			//p1.send(m1);
 			
+			p1.initByzantineAlgorithm();
 			p1.startRounds();
 			p2.startRounds();
 			p3.startRounds();
 			
-			Thread.sleep(3000);
-			assertEquals("RoundNumber P1: ", 20, p1.getSynchronizer().getRoundId());
+			Thread.sleep(5000);
+			assertEquals("RoundNumber P1: ", 10, p1.getSynchronizer().getRoundId());
 			
 
 		} catch (InterruptedException e) {
