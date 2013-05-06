@@ -124,7 +124,6 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 			bufferedIncomingMessages.add(pMessage);
 		}
 		Ack ack = new Ack(roundId, process.getProcessId(), pMessage.getSentProcessId(), pMessage.getMessageId());
-		int remoteProcessId = pMessage.getSentProcessId();
 		send(ack);
 	}
 	
@@ -185,10 +184,15 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 	
 	public synchronized void regulateSafety()
 	{
+		System.out.println("Process " + process.getProcessId() + " regulate safety at Round " + roundId);
 		if(isSafe())
 		{
-			System.out.println("Process " + process.getProcessId() + " is safe");
+			System.out.println("Process " + process.getProcessId() + " is safe at Round " + roundId);
 			broadcastSafe();
+		}
+		else
+		{
+			System.out.println("Process " + process.getProcessId() + " is not yet safe at Round " + roundId);
 		}
 	}
 	
@@ -205,7 +209,6 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 				Safe safe = new Safe(roundId, process.getProcessId(), i);
 				System.out.println("Process " + process.getProcessId() + " tries to send :" + safe.toString());
 				remoteSynchronizer.transfer(safe);
-				System.out.println("Process " + process.getProcessId() + " sent :" + safe.toString());
 			}
 
 		} catch (RemoteException | NotBoundException e) {
@@ -234,28 +237,35 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 	
 	public synchronized void regulateProgress()
 	{
+		System.out.println("Process " + process.getProcessId() + " regulate progress at round " + getRoundId());
 		if(canProgress())
 		{
 			System.out.println("Process " + process.getProcessId() + " progress to round " + (getRoundId() + 1));
 			progressToNexRound();
+		}
+		else
+		{
+			System.out.println("Process " + process.getProcessId() + " stays at round " + getRoundId());
 		}
 	}
 	
 	public boolean canProgress() {
 		boolean canProgress = true;
 		
+		//if not safe, can't progress.
 		if(!isSafe())
 		{
 			canProgress = false;
 		}
 		
+		//if not received safe from all neighbours, can't progress
 		ArrayList<Integer> neighbourIds= getRemoteProcessIds();
-		if(neighbourIds.size() != receivedSafes.size())
+		if(neighbourIds.size() > receivedSafes.size())
 		{
 			canProgress = false;
 		}
 		
-		//TODO Just to stop the process after certian rounds
+		//TODO Just to stop the process after certain rounds
 		if(roundId >= 20)
 		{
 			canProgress = false;
@@ -268,9 +278,13 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 
 		roundId++;
 		process.progressToNextRound();
-		receivedSafes = bufferedSafesNextRound;
-		bufferedIncomingMessages.clear();
 		
+		//unbox buffered safes which are meant for this round but retrieved at previous round
+		receivedSafes = bufferedSafesNextRound;
+		//clear the safes buffer.
+		bufferedSafesNextRound.clear();
+		
+		//unbox buffered messages which are meant for this round but retrieved at previous round
 		for(PayloadMessage pMessage : bufferedIncomingMessages)
 		{
 			if(pMessage.getRoundId() == roundId)
@@ -293,53 +307,24 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 	 * When other remote processes call the transfer function, this process will
 	 * receive the parameter as the message.
 	 */
-	public synchronized void transfer(PayloadMessage pMessage) throws RemoteException {
-		
-		final PayloadMessage incomingpMessage = pMessage;
-		
-		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
-			@Override
-			public void run() {
-				receive(incomingpMessage);;
-			}
-		}, 0,TimeUnit.MILLISECONDS);
+	public void transfer(PayloadMessage pMessage) throws RemoteException {
+		receive(pMessage);
 	}
 	
 	/*
 	 * When other remote processes call the transfer function, this process will
 	 * receive the parameter as the message.
 	 */
-	public synchronized void transfer(Ack ack) throws RemoteException {
-		
-		final Ack incomingAck = ack;
-		
-		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
-			@Override
-			public void run() {
-				receive(incomingAck);;
-			}
-		}, 0,TimeUnit.MILLISECONDS);
-		
+	public void transfer(Ack ack) throws RemoteException {
+				receive(ack);;
 	}
 	
 	/*
 	 * When other remote processes call the transfer function, this process will
 	 * receive the parameter as the message.
 	 */
-	public synchronized void transfer(Safe safe) throws RemoteException {
-		
-		final Safe incomingSafe = safe;
-		
-		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
-			@Override
-			public void run() {
-				receive(incomingSafe);;
-			}
-		}, 0,TimeUnit.MILLISECONDS);
-		
+	public void transfer(Safe safe) throws RemoteException {
+		receive(safe);;
 	}
 	
 	public int getRoundId() {

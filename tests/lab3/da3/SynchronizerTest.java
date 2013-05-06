@@ -40,6 +40,28 @@ public class SynchronizerTest {
 			e.printStackTrace();
 		}
 	}
+	
+	@Test
+	public void testSynchronizer2Processes() {
+		try {
+			//-------------------------------------------------------------------------------//
+			//Initialize 3 processes  
+			Process p1 = new Process();
+			Process p2 = new Process();
+			p1.register("localhost");
+			p2.register("localhost");
+			
+			p1.startRounds();
+			p2.startRounds();
+			
+			Thread.sleep(20000);
+			assertEquals("RoundNumber P1: ", 0, p1.getSynchronizer().getRoundId());
+			
+
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
 
 	@Test

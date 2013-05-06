@@ -69,6 +69,7 @@ public class Process {
 		service.schedule(new Runnable() {
 			@Override
 			public void run() {
+				System.out.println("Process " + getProcessId() + " sent all messages at round " + synchronizer.getRoundId());
 				synchronizer.regulateSafety();
 				synchronizer.regulateProgress();
 			}
