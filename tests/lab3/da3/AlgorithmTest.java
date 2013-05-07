@@ -45,10 +45,44 @@ public class AlgorithmTest {
 	}
 
 
+
 	@Test
-	public void testAlgorithm() {
+	public void testByzantineAlgorithm6Processes() {
+		try {
+			//-------------------------------------------------------------------------------//
+			//Initialize 6 processes
+			
+			Process p1 = new Process();
+			Process p2 = new Process();
+			Process p3 = new Process();
+			Process p4 = new Process();
+			Process p5 = new Process();
+			Process p6 = new Process();
+			p1.register("localhost");
+			p2.register("localhost");
+			p3.register("localhost");
+			p4.register("localhost");
+			p5.register("localhost");
+			p6.register("localhost");
+			
+			p3.initByzantineAlgorithm(2, 1);
+			p1.initRounds();
+			p2.initRounds();
+			p3.initRounds();
+			p4.initRounds();
+			p5.initRounds();
+			p6.initRounds();
+			
+			Thread.sleep(10*1000);
+			
+			for(ByzantineMessage bMessage : p2.bMessageList)
+			{
+				System.out.println(bMessage.toString());
+			}
 
-
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	

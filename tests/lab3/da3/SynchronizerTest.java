@@ -51,11 +51,11 @@ public class SynchronizerTest {
 			p1.register("localhost");
 			p2.register("localhost");
 			
-			p1.initByzantineAlgorithm();
-			p1.startRounds();
-			p2.startRounds();
+			p1.initByzantineAlgorithm(1, 1);
+			p1.initRounds();
+			p2.initRounds();
 			
-			Thread.sleep(10000);
+			Thread.sleep(10*1000);
 			assertEquals("RoundNumber P1: ", 30, p1.getSynchronizer().getRoundId());
 			
 
@@ -66,7 +66,7 @@ public class SynchronizerTest {
 
 
 	@Test
-	public void testSynchronizer3Procceses() {
+	public void testSynchronizer3Processes() {
 		try {
 			//-------------------------------------------------------------------------------//
 			//Initialize 3 processes  
@@ -80,12 +80,12 @@ public class SynchronizerTest {
 			//PayloadMessage m1 = new PayloadMessage(p1.getSynchronizer().getRoundId(), p1.getProcessId(), 2);
 			//p1.send(m1);
 			
-			p1.initByzantineAlgorithm();
-			p1.startRounds();
-			p2.startRounds();
-			p3.startRounds();
+			p1.initByzantineAlgorithm(1, 1);
+			p1.initRounds();
+			p2.initRounds();
+			p3.initRounds();
 			
-			Thread.sleep(5000);
+			Thread.sleep(20*1000);
 			assertEquals("RoundNumber P1: ", 10, p1.getSynchronizer().getRoundId());
 			
 

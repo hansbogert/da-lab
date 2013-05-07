@@ -6,6 +6,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.hamcrest.core.IsInstanceOf;
+
 import da3.message.PayloadMessage;
 
 
@@ -16,6 +18,9 @@ public class Process {
 	private ArrayList<PayloadMessage> outMessageNextRound;
 	private boolean allMessagesSent;
 	
+	private boolean decided;
+	public ArrayList<ByzantineMessage> bMessageList = new ArrayList<ByzantineMessage>();
+
 	/*
 	 * Process is a single component in the distributed system.
 	 */
@@ -41,7 +46,7 @@ public class Process {
 	}
 	
 	public void receive(PayloadMessage pMessage) {
-		processByzantineMessage(pMessage);
+		processByzantineMessage(pMessage.getByzantineMessage());
 	}
 	
 	public void progressToNextRound()
@@ -75,30 +80,59 @@ public class Process {
 		synchronizer.send(pMessage);
 	}
 	
-	public void startRounds()
+	public void initRounds()
 	{
 		synchronizer.progressToNexRound();
 	}
 	
-	public void initByzantineAlgorithm()
+	public void initByzantineAlgorithm(int f, int value)
 	{
 		ArrayList<Integer> neighboursIds = synchronizer.getRemoteProcessIds();
-		for(Integer i : neighboursIds)
+		ArrayList<Integer> commanderProcessIds = new ArrayList<Integer>();
+		ByzantineMessage bMessage = new ByzantineMessage(f+1, value, commanderProcessIds, getProcessId(), neighboursIds);
+		processByzantineMessage(bMessage);
+	}
+		
+	public void processByzantineMessage(ByzantineMessage bMessage)
+	{
+		//TODO test
+		bMessageList.add(bMessage);
+		
+		//if f is greater than 0
+		if(bMessage.getF() > 0)
 		{
-			PayloadMessage pMessageOut = new PayloadMessage(synchronizer.getRoundId()+1, processId, i);
-			pMessageOut.randomAdditiveNumber = i;
-			outMessageNextRound.add(pMessageOut);
+			int f = bMessage.getF();
+					
+			ArrayList<Integer> commanderProcessIds = (ArrayList<Integer>) bMessage.getCommanderProcessIds().clone(); 
+			commanderProcessIds.add(bMessage.getLieutenantProcessId());
+			
+			for(Integer i : bMessage.getLieutenantsProcessIds())
+			{
+				ArrayList<Integer> lieutenantsProcessIds = (ArrayList<Integer>) bMessage.getLieutenantsProcessIds().clone();
+				lieutenantsProcessIds.remove(Integer.valueOf(i));
+				ByzantineMessage bMessageChild = new ByzantineMessage(f-1, bMessage.getValue(), commanderProcessIds, i, lieutenantsProcessIds);
+				PayloadMessage pMessage = new PayloadMessage(synchronizer.getRoundId()+1, processId, i, bMessageChild);
+				outMessageNextRound.add(pMessage);
+			}
+			
+			if(processId == 1)
+			{
+				System.out.println();
+			}
+			//if the commander is not the top commander.
+			if(bMessage.getCommanderProcessIds().size()==0)
+			{
+				setDecided(true);
+				if(synchronizer.byzantineDiagnotics){System.out.println("Process " + getProcessId() + " is top commander, decided");}
+			}
+
+		}
+		else
+		{
+			setDecided(true);
+			if(synchronizer.byzantineDiagnotics){System.out.println("Process " + getProcessId() + " sent all Byzantine message, waits for decision :");}
 		}
 
-	}
-	
-	public void processByzantineMessage(PayloadMessage pMessage)
-	{
-		int nextRoundId = synchronizer.getRoundId() + 1;
-		
-		PayloadMessage pMessageOut = new PayloadMessage(nextRoundId, processId, pMessage.getSentProcessId());
-		pMessageOut.randomAdditiveNumber = pMessage.randomAdditiveNumber + 10;
-		outMessageNextRound.add(pMessageOut);
 	}
 
 	
@@ -126,6 +160,13 @@ public class Process {
 		this.allMessagesSent = allMessagesSent;
 	}
 	
+	public boolean isDecided() {
+		return decided;
+	}
+
+	public void setDecided(boolean decided) {
+		this.decided = decided;
+	}
 
 
 }
