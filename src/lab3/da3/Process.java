@@ -13,13 +13,17 @@ import da3.message.PayloadMessage;
 
 public class Process {
 
-	private int processId;
-	private Synchronizer synchronizer;
-	private ArrayList<PayloadMessage> outMessageNextRound;
+
+	protected int processId;
+	protected Synchronizer synchronizer;
+	protected ArrayList<PayloadMessage> outMessageNextRound;
 	private boolean allMessagesSent;
 	
 	private boolean decided;
 	public ArrayList<ByzantineMessage> bMessageList = new ArrayList<ByzantineMessage>();
+	protected DecisionTreeNode decisionTree;
+	
+	private boolean decisionPublished;
 
 	/*
 	 * Process is a single component in the distributed system.
@@ -36,6 +40,7 @@ public class Process {
 		}
 		
 		outMessageNextRound = new ArrayList<PayloadMessage>();
+		decisionTree = new DecisionTreeNode();
 	}
 
 	/*
@@ -51,6 +56,8 @@ public class Process {
 	
 	public void progressToNextRound()
 	{
+		regulateByzantineAgreement();
+		
 		setAllMessagesSent(false);
 		
 		//Send outgoing Messages generated in previous round but should be sent in this round.
@@ -85,6 +92,15 @@ public class Process {
 		synchronizer.progressToNexRound();
 	}
 	
+	public void regulateByzantineAgreement()
+	{
+		if(isDecided() & !decisionPublished)
+		{
+			if(synchronizer.byzantineDiagnotics){System.out.println("Process " + getProcessId() + " decided on order " + decisionTree.getMajorityOrder() + " at round " + synchronizer.getRoundId());}
+			decisionPublished = true;
+		}
+	}
+	
 	public void initByzantineAlgorithm(int f, int value)
 	{
 		ArrayList<Integer> neighboursIds = synchronizer.getRemoteProcessIds();
@@ -97,6 +113,7 @@ public class Process {
 	{
 		//TODO test
 		bMessageList.add(bMessage);
+		decisionTree.addDecision(bMessage);
 		
 		//if f is greater than 0
 		if(bMessage.getF() > 0)
@@ -115,22 +132,16 @@ public class Process {
 				outMessageNextRound.add(pMessage);
 			}
 			
-			if(processId == 1)
-			{
-				System.out.println();
-			}
 			//if the commander is not the top commander.
 			if(bMessage.getCommanderProcessIds().size()==0)
 			{
 				setDecided(true);
-				if(synchronizer.byzantineDiagnotics){System.out.println("Process " + getProcessId() + " is top commander, decided");}
 			}
 
 		}
 		else
 		{
 			setDecided(true);
-			if(synchronizer.byzantineDiagnotics){System.out.println("Process " + getProcessId() + " sent all Byzantine message, waits for decision :");}
 		}
 
 	}
@@ -169,4 +180,11 @@ public class Process {
 	}
 
 
+	public DecisionTreeNode getDecisionTree() {
+		return decisionTree;
+	}
+
+	public void setDecisionTree(DecisionTreeNode decisionTree) {
+		this.decisionTree = decisionTree;
+	}
 }

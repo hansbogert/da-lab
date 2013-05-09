@@ -56,7 +56,7 @@ public class SynchronizerTest {
 			p2.initRounds();
 			
 			Thread.sleep(10*1000);
-			assertEquals("RoundNumber P1: ", 30, p1.getSynchronizer().getRoundId());
+			assertEquals("RoundNumber P1: ", 10, p1.getSynchronizer().getRoundId());
 			
 
 		} catch (InterruptedException e) {
