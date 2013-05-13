@@ -9,14 +9,26 @@ public class FaultyProcess extends Process {
 
 	boolean messageSendingbyCoinFlip;
 	boolean orderValueByCoinFlip;
+	boolean neverSend;
 	
-	public FaultyProcess(boolean messageSendingbyCoinFlip, boolean orderValueByCoinFlip)
+	int messagesWithheld=0;
+	
+	public FaultyProcess(boolean messageSendingbyCoinFlip, boolean orderValueByCoinFlip, boolean neverSend)
 	{
 		super();
 		this.messageSendingbyCoinFlip = messageSendingbyCoinFlip;
 		this.orderValueByCoinFlip = orderValueByCoinFlip;
+		this.neverSend = neverSend;
 	}
 	
+	public int getMessagesWithheld() {
+		return messagesWithheld;
+	}
+
+	public void setMessagesWithheld(int messagesWithheld) {
+		this.messagesWithheld = messagesWithheld;
+	}
+
 	@Override
 	public void processByzantineMessage(ByzantineMessage bMessage)
 	{
@@ -47,13 +59,17 @@ public class FaultyProcess extends Process {
 				int orderValue = (orderValueByCoinFlip) ? random.nextInt(2) : bMessage.getValue();
 				ByzantineMessage bMessageChild = new ByzantineMessage(f-1, orderValue, commanderProcessIds, i, lieutenantsProcessIds);
 				PayloadMessage pMessage = new PayloadMessage(synchronizer.getRoundId()+1, processId, i, bMessageChild);
-				if(messageSendingbyCoinFlip && !(random.nextInt(2)==1))
+				if(!neverSend)
 				{
-					//Hmm should I send the message?
-				}
-				else
-				{
-					outMessageNextRound.add(pMessage);
+					if(messageSendingbyCoinFlip && !(random.nextInt(2)==1))
+					{
+						//Hmm should I send the message?
+						setMessagesWithheld(getMessagesWithheld()+1);
+					}
+					else
+					{
+						outMessageNextRound.add(pMessage);
+					}
 				}
 
 			}
@@ -63,7 +79,6 @@ public class FaultyProcess extends Process {
 			{
 				setDecided(true);
 			}
-
 		}
 		else
 		{

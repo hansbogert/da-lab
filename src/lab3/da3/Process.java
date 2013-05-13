@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.hamcrest.core.IsInstanceOf;
 
+import com.sun.swing.internal.plaf.synth.resources.synth;
+
 import da3.message.PayloadMessage;
 
 
@@ -22,6 +24,8 @@ public class Process {
 	private boolean decided;
 	public ArrayList<ByzantineMessage> bMessageList = new ArrayList<ByzantineMessage>();
 	protected DecisionTreeNode decisionTree;
+	
+	private int messagesSent = 0;
 	
 	private boolean decisionPublished;
 
@@ -41,6 +45,14 @@ public class Process {
 		
 		outMessageNextRound = new ArrayList<PayloadMessage>();
 		decisionTree = new DecisionTreeNode();
+	}
+
+	public int getMessagesSent() {
+		return messagesSent;
+	}
+
+	public void setMessagesSent(int messagesSent) {
+		this.messagesSent = messagesSent;
 	}
 
 	/*
@@ -82,14 +94,15 @@ public class Process {
 	}
 	
 	
-	public void send(PayloadMessage pMessage)
+	synchronized public void send(PayloadMessage pMessage)
 	{
+		setMessagesSent(getMessagesSent()+1);
 		synchronizer.send(pMessage);
 	}
 	
 	public void initRounds()
 	{
-		synchronizer.progressToNexRound();
+		synchronizer.progressToNextRound();
 	}
 	
 	public void regulateByzantineAgreement()

@@ -37,17 +37,17 @@ public class AlgorithmTest {
 	}
 	
 	@Test
-	public void testByzantineAlgorithm5Processes() {
+	public void testByzantineAlgorithm5ProcessesNeverSend() {
 		try {
 			//-------------------------------------------------------------------------------//
-			//Initialize 7 processes
+			//Initialize 5 processes
 			Process p1 = new Process();
 			Process p2 = new Process();
 			Process p3 = new Process();
 			Process p4 = new Process();
 			//Faulty Process which flip coin to decide whether to sent message(first true)
 			//, and flip coin to decide whether to manipulate the order(second true).
-			FaultyProcess p5 = new FaultyProcess(true, true);
+			FaultyProcess p5 = new FaultyProcess(true, true, true);
 			p1.register("localhost");
 			p2.register("localhost");
 			p3.register("localhost");
@@ -61,7 +61,7 @@ public class AlgorithmTest {
 			p3.initRounds();
 			p4.initRounds();
 			p5.initRounds();
-			Thread.sleep(10*1000);
+			Thread.sleep(2*1000);
 			
 			assertEquals(p1.getDecisionTree().getMajorityOrder(), 1);
 			assertEquals(p2.getDecisionTree().getMajorityOrder(), 1);
@@ -81,6 +81,16 @@ public class AlgorithmTest {
 			//To see the final decision made by p4
 			System.out.println("final order :" + p4.getDecisionTree().getMajorityOrder());
 			
+			//total messages sent:
+			int totalMessagesSent = p1.getMessagesSent() 
+					+ p2.getMessagesSent() 
+					+ p3.getMessagesSent() 
+					+ p4.getMessagesSent()
+					+ p5.getMessagesSent();
+			int totalMessagesWithheld = p5.getMessagesWithheld();
+			System.out.println("Total messages sent: " + totalMessagesSent);
+			System.out.println("Total messages withheld: " + totalMessagesWithheld);
+
 			System.out.println();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -110,8 +120,10 @@ public class AlgorithmTest {
 			Process p3 = new Process();
 			Process p4 = new Process();
 			Process p5 = new Process();
-			FaultyProcess p6 = new FaultyProcess(true, true);
-			FaultyProcess p7 = new FaultyProcess(true, true);
+			FaultyProcess p6 = new FaultyProcess(true, true, false);
+			FaultyProcess p7 = new FaultyProcess(true, true, false);
+//			Process p6 = new Process();
+//			Process p7 = new Process();
 			p1.register("localhost");
 			p2.register("localhost");
 			p3.register("localhost");
@@ -138,6 +150,19 @@ public class AlgorithmTest {
 			assertEquals(p3.getDecisionTree().getMajorityOrder(), 1);
 			assertEquals(p4.getDecisionTree().getMajorityOrder(), 1);
 			assertEquals(p5.getDecisionTree().getMajorityOrder(), 1);
+			
+			int totalMessagesSent = p1.getMessagesSent() 
+					+ p2.getMessagesSent() 
+					+ p3.getMessagesSent() 
+					+ p4.getMessagesSent()
+					+ p5.getMessagesSent()
+					+ p6.getMessagesSent()
+					+ p7.getMessagesSent();
+
+			int totalMessagesWithheld = p6.getMessagesWithheld()
+					+ p7.getMessagesWithheld();
+			System.out.println("Total messages sent: " + totalMessagesSent);
+			System.out.println("Total messages withheld: " + totalMessagesWithheld);
 
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -150,7 +175,7 @@ public class AlgorithmTest {
 			//-------------------------------------------------------------------------------//
 			//Initialize 4 processes
 			int processCount = 10;
-			int fcount = 2;
+			int fcount = 3;
 			int order = 1;
 			ArrayList<Process> processes = new ArrayList<Process>();
 			
@@ -162,7 +187,7 @@ public class AlgorithmTest {
 			
 			for(int i = 0; i<fcount; i++)
 			{
-				FaultyProcess p = new FaultyProcess(true, true);
+				FaultyProcess p = new FaultyProcess(true, true, false);
 				processes.add(p);
 			}
 			
