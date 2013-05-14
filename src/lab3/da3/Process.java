@@ -2,6 +2,7 @@ package da3;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -82,15 +83,19 @@ public class Process {
 		setAllMessagesSent(true);
 		
 		
-		final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
+		final ExecutorService service = Executors.newSingleThreadExecutor();
+		service.execute(new Runnable() {
 			@Override
 			public void run() {
-				if(synchronizer.synchronizerDiagnotics){System.out.println("Process " + getProcessId() + " sent all messages at round " + synchronizer.getRoundId());}
+				if(synchronizer.synchronizerDiagnotics){
+					System.out.println("Process " + getProcessId() + " sent all messages at round " + synchronizer.getRoundId());}
 				synchronizer.regulateSafety("all messages sent");
 				synchronizer.regulateProgress("all messages sent");
+
+
 			}
-		}, 0,TimeUnit.MILLISECONDS);
+		});
+		
 	}
 	
 	
@@ -109,7 +114,8 @@ public class Process {
 	{
 		if(isDecided() & !decisionPublished)
 		{
-			if(synchronizer.byzantineDiagnotics){System.out.println("Process " + getProcessId() + " decided on order " + decisionTree.getMajorityOrder() + " at round " + synchronizer.getRoundId());}
+			if(synchronizer.byzantineDiagnotics){
+				System.out.println("Process " + getProcessId() + " decided on order " + decisionTree.getMajorityOrder() + " at round " + synchronizer.getRoundId());}
 			decisionPublished = true;
 		}
 	}
