@@ -19,7 +19,10 @@ import org.junit.Test;
 
 import da3.Process;
 
+
 public class AlgorithmTest {
+	public static final int TESTS = 10;
+
 	Registry registry;
 
 	@Before
@@ -37,7 +40,43 @@ public class AlgorithmTest {
 	}
 	
 	@Test
-	public void testByzantineAlgorithm5ProcessesNeverSend() {
+	public void testByzantineAlgorithm5ProcessesNeverSend()
+	{
+		testByzantineAlgorithm5Processes(false,false,true, 1);
+		
+	}
+	
+	@Test
+	public void testByzantineAlgorithm5ProcessesFlipSending()
+	{
+		for (int i = 0; i < TESTS; i++) {
+			testByzantineAlgorithm5Processes(true,false,false, 1);
+			tearDown();
+			setUp();
+		}
+	}
+	
+	@Test
+	public void testByzantineAlgorithm5ProcessesFlipOrder()
+	{
+		for (int i = 0; i < TESTS; i++) {
+			testByzantineAlgorithm5Processes(false,true,false, 1);
+			tearDown();
+			setUp();
+		}
+	}
+	
+	@Test
+	public void testByzantineAlgorithm5ProcessesFlipOrderBigF()
+	{
+		for (int i = 0; i < TESTS; i++) {
+			testByzantineAlgorithm5Processes(false,true,false, 2);
+			tearDown();
+			setUp();
+		}
+	}
+	
+	public void testByzantineAlgorithm5Processes(boolean sendingByCoinFlip, boolean orderByCoinFlip, boolean neverSend, int f) {
 		try {
 			//-------------------------------------------------------------------------------//
 			//Initialize 5 processes
@@ -47,7 +86,7 @@ public class AlgorithmTest {
 			Process p4 = new Process();
 			//Faulty Process which flip coin to decide whether to sent message(first true)
 			//, and flip coin to decide whether to manipulate the order(second true).
-			FaultyProcess p5 = new FaultyProcess(true, true, true);
+			FaultyProcess p5 = new FaultyProcess(sendingByCoinFlip, orderByCoinFlip, neverSend);
 			p1.register("localhost");
 			p2.register("localhost");
 			p3.register("localhost");
@@ -55,7 +94,7 @@ public class AlgorithmTest {
 			p5.register("localhost");
 			
 			//process 1 initializes Byzantine agreement algorithm, with order 1, with faulty process 1
-			p1.initByzantineAlgorithm(1, 1);
+			p1.initByzantineAlgorithm(f, 1);
 			p1.initRounds();
 			p2.initRounds();
 			p3.initRounds();
@@ -77,7 +116,7 @@ public class AlgorithmTest {
 			
 			//To see the decision tree of p4
 			System.out.println(p4.getDecisionTree().toString());
-			
+				
 			//To see the final decision made by p4
 			System.out.println("final order :" + p4.getDecisionTree().getMajorityOrder());
 			

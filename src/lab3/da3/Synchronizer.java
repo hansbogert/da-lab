@@ -7,6 +7,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -409,14 +410,14 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 	 */
 	public void transfer(Ack ack) throws RemoteException {
 		final Ack finalAck = ack;
-		final ScheduledExecutorService service = Executors
-				.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
+		final ExecutorService service = Executors
+				.newSingleThreadExecutor();
+		service.execute(new Runnable() {
 			@Override
 			public void run() {
 				receive(finalAck);
 			}
-		}, 0, TimeUnit.MILLISECONDS);
+		});
 	}
 
 	/*
@@ -425,14 +426,14 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 	 */
 	public void transfer(Safe safe) throws RemoteException {
 		final Safe finalSafe = safe;
-		final ScheduledExecutorService service = Executors
-				.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
+		final ExecutorService service = Executors
+				.newSingleThreadExecutor();
+		service.execute(new Runnable() {
 			@Override
 			public void run() {
 				receive(finalSafe);
 			}
-		}, 0, TimeUnit.MILLISECONDS);
+		});
 	}
 
 	public int getRoundId() {

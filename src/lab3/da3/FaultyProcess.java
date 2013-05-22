@@ -71,6 +71,10 @@ public class FaultyProcess extends Process {
 						outMessageNextRound.add(pMessage);
 					}
 				}
+				else
+				{
+					setMessagesWithheld(getMessagesWithheld()+1);
+				}
 
 			}
 			
