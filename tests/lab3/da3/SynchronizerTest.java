@@ -51,6 +51,8 @@ public class SynchronizerTest {
 			p1.register("localhost");
 			p2.register("localhost");
 			
+			p1.setUpDecisionTree(1, 0);
+			p2.setUpDecisionTree(1, 0);
 			p1.initByzantineAlgorithm(1, 1);
 			p1.initRounds();
 			p2.initRounds();
@@ -80,6 +82,9 @@ public class SynchronizerTest {
 			//PayloadMessage m1 = new PayloadMessage(p1.getSynchronizer().getRoundId(), p1.getProcessId(), 2);
 			//p1.send(m1);
 			
+			p1.setUpDecisionTree(1, 1);
+			p2.setUpDecisionTree(1, 1);
+			p3.setUpDecisionTree(1, 1);
 			p1.initByzantineAlgorithm(1, 1);
 			p1.initRounds();
 			p2.initRounds();
