@@ -10,6 +10,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Vector;
 
 import org.hamcrest.core.Is;
@@ -93,6 +94,12 @@ public class AlgorithmTest {
 			p4.register("localhost");
 			p5.register("localhost");
 			
+			p1.setUpDecisionTree(p1.getProcessId(), f);
+			p2.setUpDecisionTree(p1.getProcessId(), f);
+			p3.setUpDecisionTree(p1.getProcessId(), f);
+			p4.setUpDecisionTree(p1.getProcessId(), f);
+			p5.setUpDecisionTree(p1.getProcessId(), f);
+			
 			//process 1 initializes Byzantine agreement algorithm, with order 1, with faulty process 1
 			p1.initByzantineAlgorithm(f, 1);
 			p1.initRounds();
@@ -102,11 +109,11 @@ public class AlgorithmTest {
 			p5.initRounds();
 			Thread.sleep(2*1000);
 			
-			assertEquals(p1.getDecisionTree().getMajorityOrder(), 1);
-			assertEquals(p2.getDecisionTree().getMajorityOrder(), 1);
-			assertEquals(p3.getDecisionTree().getMajorityOrder(), 1);
-			assertEquals(p4.getDecisionTree().getMajorityOrder(), 1);
-			assertEquals(p5.getDecisionTree().getMajorityOrder(), 1);
+			assertEquals(p1.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
+			assertEquals(p2.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
+			assertEquals(p3.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
+			assertEquals(p4.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
+			assertEquals(p5.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
 			
 			//To see all Byzantine Messages received by p4
 			for(ByzantineMessage bMessage : p4.bMessageList)
@@ -171,6 +178,14 @@ public class AlgorithmTest {
 			p6.register("localhost");
 			p7.register("localhost");
 			
+			p1.setUpDecisionTree(p1.getProcessId(), 2);
+			p2.setUpDecisionTree(p1.getProcessId(), 2);
+			p3.setUpDecisionTree(p1.getProcessId(), 2);
+			p4.setUpDecisionTree(p1.getProcessId(), 2);
+			p5.setUpDecisionTree(p1.getProcessId(), 2);
+			p6.setUpDecisionTree(p1.getProcessId(), 2);
+			p7.setUpDecisionTree(p1.getProcessId(), 2);
+			
 			p1.initByzantineAlgorithm(2, 1);
 			p1.initRounds();
 			p2.initRounds();
@@ -184,11 +199,11 @@ public class AlgorithmTest {
 			
 			System.out.println();
 			
-			assertEquals(p1.getDecisionTree().getMajorityOrder(), 1);
-			assertEquals(p2.getDecisionTree().getMajorityOrder(), 1);
-			assertEquals(p3.getDecisionTree().getMajorityOrder(), 1);
-			assertEquals(p4.getDecisionTree().getMajorityOrder(), 1);
-			assertEquals(p5.getDecisionTree().getMajorityOrder(), 1);
+			assertEquals(p1.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
+			assertEquals(p2.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
+			assertEquals(p3.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
+			assertEquals(p4.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
+			assertEquals(p5.getDecisionTree().getMajorityOrder(), Integer.valueOf(1));
 			
 			int totalMessagesSent = p1.getMessagesSent() 
 					+ p2.getMessagesSent() 
@@ -236,6 +251,12 @@ public class AlgorithmTest {
 			}
 			
 			Process p1 = processes.get(0);
+			
+			for(Process p : processes)
+			{
+				p.setUpDecisionTree(p1.getProcessId(), fcount);
+			}
+			
 			p1.initByzantineAlgorithm(fcount, order);
 			
 			for(Process p : processes)
@@ -265,4 +286,100 @@ public class AlgorithmTest {
 		}
 	}
 
+	@Test
+	public void testByzantineAlgorithm_AnyProcesses()
+	{
+		//-------------------------------------------------------------------------------//
+		//Initialize 5 processes
+		Random r = new Random();
+		ArrayList<Process> processList = new ArrayList<Process>();
+		ArrayList<Process> processNFList = new ArrayList<Process>();
+		ArrayList<Process> processFList = new ArrayList<Process>();
+		Process initProcess;
+		Integer order = r.nextInt(2);
+		Integer non_f = 5;
+		Integer f = 2;
+		Integer pCount = f + non_f;
+		
+		for(int i = 0; i<non_f; i++)
+		{
+			Process p = new Process();
+			processList.add(p);
+			processNFList.add(p);
+		}
+		
+		for(int i = 0; i< f; i++)
+		{
+			FaultyProcess fp = new FaultyProcess(true, true, false);
+			processList.add(fp);
+			processFList.add(fp);
+		}
+		
+		for(Process p : processList)
+		{
+			p.register("localhost");
+		}
+		
+		initProcess = processList.get(r.nextInt(pCount));//r.nextInt(pCount)
+		
+		for(Process p : processList)
+		{
+			p.setUpDecisionTree(initProcess.getProcessId(), f);
+		}
+		
+		
+		System.out.println("initProcess: " + initProcess.getProcessId());
+		
+		for(Process p : processNFList)
+		{
+			System.out.println("Non-Faulty Process: " + p.getProcessId());
+		}
+		for(Process p : processFList)
+		{
+			System.out.println("Faulty Process: " + p.getProcessId());
+		}
+		
+		initProcess.initByzantineAlgorithm(f, order);
+		//initProcess must start runs first or last
+		initProcess.initRounds();
+		for(Process p : processList)
+		{
+			if(p.getProcessId() != initProcess.getProcessId())
+				p.initRounds();
+		}
+		
+		try {
+			Thread.sleep(10*1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for(Process p : processList)
+		{
+			System.out.println("Process " + p.getProcessId() + " Messages In " + p.bMessageList.size());
+			for(ByzantineMessage bMessage : p.bMessageList)
+			{
+				System.out.println(bMessage.toString());
+			}
+			System.out.println("Process " + p.getProcessId() + " Messages Out " + p.bMessageListOut.size());
+			for(ByzantineMessage bMessage : p.bMessageListOut)
+			{
+				System.out.println(bMessage.toString());
+			}
+			System.out.println();
+		}
+
+		//System.out.println(processNFList.get(1).getDecisionTree().toString());
+		
+		//System.out.println(p1.getDecisionTree().toString());		
+		for(Process p : processNFList)
+		{
+			
+			assertEquals(p.getDecisionTree().getMajorityOrder(), processNFList.get(0).getDecisionTree().getMajorityOrder());
+		}
+		
+		
+		System.out.println();
+	}
 }

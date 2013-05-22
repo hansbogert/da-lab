@@ -390,18 +390,14 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 	public void transfer(PayloadMessage pMessage) throws RemoteException {
 
 		final PayloadMessage finalpMessage = pMessage;
-		int delay = (getRoundId() == 0) ? 0 : 0; // nasty problem that if you
-													// are still in round 0,
-													// than receiving payload
-													// message is a problem.
-		final ScheduledExecutorService service = Executors
-				.newSingleThreadScheduledExecutor();
-		service.schedule(new Runnable() {
+
+		final ExecutorService service = Executors.newSingleThreadExecutor();
+		service.execute(new Runnable() {
 			@Override
 			public void run() {
 				receive(finalpMessage);
 			}
-		}, delay, TimeUnit.MILLISECONDS);
+		});
 	}
 
 	/*
