@@ -23,11 +23,14 @@ public class Process {
 	
 	private boolean decided;
 	public ArrayList<ByzantineMessage> bMessageList = new ArrayList<ByzantineMessage>();
+	public ArrayList<ByzantineMessage> bMessageListOut = new ArrayList<ByzantineMessage>();
 	protected DecisionTreeNode decisionTree;
 	
 	private int messagesSent = 0;
 	
 	private boolean decisionPublished;
+	
+	private boolean isTopCommander;
 
 	/*
 	 * Process is a single component in the distributed system.
@@ -44,7 +47,6 @@ public class Process {
 		}
 		
 		outMessageNextRound = new ArrayList<PayloadMessage>();
-		decisionTree = new DecisionTreeNode();
 	}
 
 	public int getMessagesSent() {
@@ -64,10 +66,21 @@ public class Process {
 	
 	public void receive(PayloadMessage pMessage) {
 		processByzantineMessage(pMessage.getByzantineMessage());
+		if(pMessage.getByzantineMessage().getCommanderProcessIds().size() < synchronizer.getRoundId())
+		{
+			System.out.println("Why would round "+synchronizer.getRoundId()+" receive stuffs from " +pMessage.getByzantineMessage().getCommanderProcessIds().size()+" commandars?"+ pMessage.toString());
+		}
 	}
 	
 	public void progressToNextRound()
 	{
+		if(!isTopCommander)
+		{
+			int lastRoundId = getSynchronizer().getRoundId() - 1;
+			checkMissedMessages(decisionTree, lastRoundId - 1);
+		}
+
+		
 		regulateByzantineAgreement();
 		
 		setAllMessagesSent(false);
@@ -97,7 +110,17 @@ public class Process {
 	synchronized public void send(PayloadMessage pMessage)
 	{
 		setMessagesSent(getMessagesSent()+1);
+
+		pMessage.setRoundId(synchronizer.getRoundId()); //TODO: Dirty Code, safety measure.
 		synchronizer.send(pMessage);
+		if(pMessage.getRoundId()> synchronizer.getRoundId())
+		{
+			System.out.println("how can round id be different?" + pMessage.getRoundId() +" "+ synchronizer.getRoundId() +" "+ pMessage.toString());
+		}
+		if(pMessage.getByzantineMessage().getCommanderProcessIds().size() < synchronizer.getRoundId())
+		{
+			System.out.println("Why would round "+synchronizer.getRoundId()+" send stuffs from " +pMessage.getByzantineMessage().getCommanderProcessIds().size()+" commandars?"+ pMessage.toString());
+		}
 	}
 	
 	public void initRounds()
@@ -114,6 +137,61 @@ public class Process {
 		}
 	}
 	
+	public ByzantineMessage forgeByzantineMessage(DecisionTreeNode dNode, ArrayList<Integer> neighbourIds, Integer processId)
+	{
+		ArrayList<Integer> commanderProcessIds = dNode.getAncestorIds();
+		
+		commanderProcessIds.add(dNode.getCommander());
+
+		ArrayList<Integer> lieutenantsProcessIds = neighbourIds;
+		for(Integer i : commanderProcessIds)
+		{
+			lieutenantsProcessIds.remove(Integer.valueOf(i));
+		}
+		lieutenantsProcessIds.remove(Integer.valueOf(processId));
+		
+		int defaultValue = 0;
+		
+		ByzantineMessage bMessage = new ByzantineMessage(dNode.getF(), defaultValue, commanderProcessIds, processId, lieutenantsProcessIds);
+		bMessage.setForged(true);
+		//System.out.println("Process " + getProcessId() + " FORGED: " + bMessage.toString() + " at round " + synchronizer.getRoundId() );
+		processByzantineMessage(bMessage);
+		return bMessage;
+	}
+	
+	public void checkMissedMessages(DecisionTreeNode dNode, int level)
+	{
+		if(level == 0)
+		{
+			if(!dNode.isOrderReceived() && dNode.getOrder() == null)
+			{
+				ArrayList<Integer> neighboursIds = synchronizer.getRemoteProcessIds();
+				forgeByzantineMessage(dNode, neighboursIds, getProcessId());
+			}
+		}
+		else if(level > 0)
+		{
+			for(DecisionTreeNode dNodeChild : dNode.getChildren())
+			{
+				checkMissedMessages(dNodeChild, level - 1);
+			}
+				
+		}
+	}
+	
+	public void setUpDecisionTree(Integer topCommanderId, Integer f)
+	{
+		if(topCommanderId.intValue()==getProcessId())
+		{
+			isTopCommander = true;
+		}
+		ArrayList<Integer> lieutenantIds = synchronizer.getRemoteProcessIds();
+		lieutenantIds.remove(Integer.valueOf(topCommanderId));
+		lieutenantIds.remove(Integer.valueOf(getProcessId()));
+		Integer level = 0;
+		decisionTree = new DecisionTreeNode(topCommanderId, lieutenantIds, f, level);
+	}
+	
 	public void initByzantineAlgorithm(int f, int value)
 	{
 		ArrayList<Integer> neighboursIds = synchronizer.getRemoteProcessIds();
@@ -125,6 +203,7 @@ public class Process {
 	public void processByzantineMessage(ByzantineMessage bMessage)
 	{
 		//TODO test
+		int order = bMessage.getValue();
 		bMessageList.add(bMessage);
 		decisionTree.addDecision(bMessage);
 		
@@ -143,6 +222,12 @@ public class Process {
 				ByzantineMessage bMessageChild = new ByzantineMessage(f-1, bMessage.getValue(), commanderProcessIds, i, lieutenantsProcessIds);
 				PayloadMessage pMessage = new PayloadMessage(synchronizer.getRoundId()+1, processId, i, bMessageChild);
 				outMessageNextRound.add(pMessage);
+				bMessageListOut.add(bMessageChild);
+				
+//				if(bMessageChild.getValue()==0)
+//				{
+//					System.out.println("P " + getProcessId() + "get" + bMessage.toString() +"and  produces bMessage "+ bMessageChild.toString());
+//				}
 			}
 			
 			//if the commander is not the top commander.
@@ -156,7 +241,6 @@ public class Process {
 		{
 			setDecided(true);
 		}
-
 	}
 
 	

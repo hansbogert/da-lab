@@ -9,25 +9,44 @@ public class DecisionTreeNode {
 	private Integer order;
 	private Integer commander;
 	private ArrayList<DecisionTreeNode> children;
+	private DecisionTreeNode parent;
+
 	private Integer level;
+	private Integer f;
 
 	private boolean orderReceived;
 	
-	/*
-	 * Generate root node.
-	 */
-	public DecisionTreeNode()
-	{
-		setLevel(0);
-		setOrderReceived(false);
-		children = new ArrayList<DecisionTreeNode>();
-	}
 	
 	public DecisionTreeNode(Integer level)
 	{
 		setLevel(level);
 		setOrderReceived(false);
 		children = new ArrayList<DecisionTreeNode>();
+		System.out.println("DecisionTreeNode(Integer level) should never be used");
+	}
+	
+	/*
+	 * Generate root node.
+	 */
+	public DecisionTreeNode(Integer commanderId, ArrayList<Integer> lieutenantIds, Integer f, Integer level)
+	{
+		setF(f);
+		setLevel(level);
+		setCommander(commanderId);
+		setOrderReceived(false);
+		children = new ArrayList<DecisionTreeNode>();
+		
+		if(f > 0)
+		{
+			for(Integer i : lieutenantIds)
+			{
+				ArrayList<Integer> reducedLieutenantIds = (ArrayList<Integer>) lieutenantIds.clone();
+				reducedLieutenantIds.remove(Integer.valueOf(i));
+				DecisionTreeNode childNode = new DecisionTreeNode(i, reducedLieutenantIds, f - 1, level + 1);
+				childNode.setParent(this);
+				children.add(childNode);
+			}
+		}
 	}
 	
 	public void addDecision(ByzantineMessage bMessage)
@@ -41,20 +60,34 @@ public class DecisionTreeNode {
 			}
 			else if (commanderProcessIds.size() == (getLevel() + 1) )  //the last commander's position is same as the tree level, set the order here.
 			{
+				if(isOrderReceived())
+				{
+					if(bMessage.isForged())
+					{
+					System.out.println("Fake bMessage overwrite value!");
+					}
+					else
+					{
+						//System.out.println("No reason to receive the message at this late");
+					}
+				}
 				int receivedOrder = bMessage.getValue();
 				if(receivedOrder==0 | receivedOrder==1)
 				{
 					setOrder(receivedOrder);
+					setOrderReceived(true);
 				}
 				else
 				{
 					setOrder(Integer.valueOf(0));
+					setOrderReceived(true);
 				}
 				setCommander(commanderProcessIds.get(getLevel()));
 			}
 			else if (commanderProcessIds.size() < (getLevel() + 1) ) // there are no commanders, initialized by divine power.
 			{
 				setOrder(bMessage.getValue());
+				setOrderReceived(true);
 				setCommander(bMessage.getLieutenantProcessId());
 			}
 		
@@ -85,10 +118,22 @@ public class DecisionTreeNode {
 		{
 			DecisionTreeNode dNode = new DecisionTreeNode(nextLevel);
 			dNode.setCommander(commanderNexLevel);
-			dNode.setOrder(0);
 			children.add(dNode);
 			dNode.addDecision(bMessage);
 		}
+	}
+	
+	public ArrayList<Integer> getAncestorIds()
+	{
+		ArrayList<Integer> ancestorAndSelfIds = new ArrayList<Integer>();
+		DecisionTreeNode ancestor = this;
+		while(ancestor.getParent() != null)
+		{
+			ancestor = ancestor.getParent();
+			ancestorAndSelfIds.add(ancestor.getCommander());
+		}
+		Collections.reverse(ancestorAndSelfIds);
+		return ancestorAndSelfIds;
 	}
 	
 	public Integer getOrder() {
@@ -131,44 +176,6 @@ public class DecisionTreeNode {
 		this.level = level;
 	}
 	
-	public static void main(String[] args)
-	{
-		ArrayList<Integer> commandersA = new ArrayList<Integer>();
-		ArrayList<Integer> lienntautsA = new ArrayList<Integer>(Arrays.asList(2, 3, 4, 5));
-		ByzantineMessage bMessage = new ByzantineMessage(1, 1, commandersA, 1, lienntautsA);
-		
-		ArrayList<Integer> commandersB = new ArrayList<Integer>(Arrays.asList(1));
-		ArrayList<Integer> lienntautsB = new ArrayList<Integer>(Arrays.asList(3, 4, 5));
-		ByzantineMessage bMessageB = new ByzantineMessage(1, 1, commandersB, 2, lienntautsB);
-		
-		ArrayList<Integer> commandersC = new ArrayList<Integer>(Arrays.asList(1, 2));
-		ArrayList<Integer> lienntautsC = new ArrayList<Integer>(Arrays.asList(4, 5));
-		ByzantineMessage bMessageC = new ByzantineMessage(0, 0, commandersC, 3, lienntautsC);
-		
-		ArrayList<Integer> commandersD = new ArrayList<Integer>(Arrays.asList(1, 3));
-		ArrayList<Integer> lienntautsD = new ArrayList<Integer>(Arrays.asList(4, 5));
-		ByzantineMessage bMessageD = new ByzantineMessage(0, 1, commandersD, 2, lienntautsD);
-		
-		ArrayList<Integer> commandersE = new ArrayList<Integer>(Arrays.asList(1, 4, 3));
-		ArrayList<Integer> lienntautsE = new ArrayList<Integer>(Arrays.asList(5));
-		ByzantineMessage bMessageE = new ByzantineMessage(-1, 0, commandersE, 2, lienntautsE);
-		
-		System.out.println(bMessage);
-		
-		DecisionTreeNode dNodeA = new DecisionTreeNode();
-		//dNodeA.addDecision(bMessage);
-		dNodeA.addDecision(bMessageB);
-		dNodeA.addDecision(bMessageC);
-		dNodeA.addDecision(bMessageD);
-		dNodeA.addDecision(bMessageE);
-		
-		int finalOrder = dNodeA.getMajorityOrder();
-		
-		
-		System.out.println(dNodeA);
-		System.out.println("finalOrder: " + finalOrder);
-	}
-	
 	public String toString()
 	{
 		String nodeString =  "Node level: " + getLevel() + " Commander: " + getCommander() + " Order " +getOrder() + "\n";
@@ -183,25 +190,62 @@ public class DecisionTreeNode {
 		return nodeString;
 	}
 	
-	public int getMajorityOrder()
+	public Integer getF() {
+		return f;
+	}
+
+	public void setF(Integer f) {
+		this.f = f;
+	}
+	
+	public DecisionTreeNode getParent() {
+		return parent;
+	}
+
+	public void setParent(DecisionTreeNode parent) {
+		this.parent = parent;
+	}
+	
+	public Integer getMajorityOrder()
 	{
 		ArrayList<Integer> orders = new ArrayList<Integer>();
 		
-		orders.add(getOrder());
+		if(isOrderReceived())
+		{
+			orders.add(getOrder());
+		}
+		
 		
 		for(DecisionTreeNode childNode : children)
 		{
-			orders.add(childNode.getMajorityOrder());
+				orders.add(childNode.getMajorityOrder());
 		}
 		
-		if(Collections.frequency(orders, 1) > Collections.frequency(orders, 0))
+		if(orders.contains(Integer.valueOf(1)) || orders.contains(Integer.valueOf(0)))
 		{
-			return 1;
+			if(Collections.frequency(orders, 1) > Collections.frequency(orders, 0))
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
 		}
 		else
 		{
-			return 0;
+			return null;
+		}	
+	}
+
+	public String DisplayMajority()
+	{
+		ArrayList<Integer> m = new ArrayList<Integer>();
+		m.add(getMajorityOrder());
+		for(DecisionTreeNode d : children)
+		{
+			m.add(d.getMajorityOrder());
 		}
-		
+		return m.toString();
 	}
 }

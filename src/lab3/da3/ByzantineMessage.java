@@ -12,13 +12,16 @@ public class ByzantineMessage implements Serializable {
 	
 	private int value;
 	
-
 	private ArrayList<Integer> commanderProcessIds;
 	
 	private int lieutenantProcessId;
 	
 	private ArrayList<Integer> lieutenantsProcessIds;
 	
+	public boolean forged;
+	
+
+
 	public ByzantineMessage(int f, int value, ArrayList<Integer> commanderProcessIds, int lieutenantProcessId, ArrayList<Integer> lieutenantsProcessIds)
 	{
 		setF(f);
@@ -43,7 +46,8 @@ public class ByzantineMessage implements Serializable {
 				+ " value: " + getValue()
 				+ " commander: " + getCommanderProcessIds().toString() 
 				+ " lieutenant: " + getLieutenantProcessId()
-				+ " lieutenants: " + getLieutenantsProcessIds().toString() +" }";
+				+ " lieutenants: " + getLieutenantsProcessIds().toString()
+				+ ((forged) ? " forged " : "") +" }";
 	}
 	
 	public ArrayList<Integer> getCommanderProcessIds() {
@@ -77,5 +81,13 @@ public class ByzantineMessage implements Serializable {
 
 	public void setValue(int value) {
 		this.value = value;
+	}
+	
+	public boolean isForged() {
+		return forged;
+	}
+
+	public void setForged(boolean forged) {
+		this.forged = forged;
 	}
 }

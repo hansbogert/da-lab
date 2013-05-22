@@ -72,7 +72,7 @@ public class DecisionTreeNodeTest {
 		ArrayList<Integer> lienntautsE = new ArrayList<Integer>(Arrays.asList(5));
 		ByzantineMessage bMessageE = new ByzantineMessage(0, 0, commandersE, 2, lienntautsE);
 		
-		DecisionTreeNode dNodeA = new DecisionTreeNode();
+		DecisionTreeNode dNodeA = new DecisionTreeNode(1, new ArrayList<Integer>(Arrays.asList(3, 4, 5)), 2, 0);
 		dNodeA.addDecision(bMessageB);
 		dNodeA.addDecision(bMessageC);
 		dNodeA.addDecision(bMessageD);
@@ -99,7 +99,28 @@ public class DecisionTreeNodeTest {
 		
 		System.out.println(bMessage);
 		
-		DecisionTreeNode dNodeA = new DecisionTreeNode();
+		DecisionTreeNode dNodeA = new DecisionTreeNode(1, new ArrayList<Integer>(Arrays.asList(2, 3, 4, 5)), 2, 0);
+		dNodeA.addDecision(bMessage);
+		
+		int finalOrder = dNodeA.getMajorityOrder();
+		
+		System.out.println(dNodeA);
+		System.out.println("finalOrder: " + finalOrder);
+		
+		assertEquals("Final order should be 1", 1, finalOrder);
+	}
+	
+	@Test
+	public void testDecisionTreeNode_Debug01() {
+		
+		//top commander received order from divine power, in this case, hard-coded by me.
+		ArrayList<Integer> commandersA = new ArrayList<Integer>(Arrays.asList(1));
+		ArrayList<Integer> lienntautsA = new ArrayList<Integer>(Arrays.asList(3, 4));
+		ByzantineMessage bMessage = new ByzantineMessage(1, 1, commandersA, 2, lienntautsA);
+		
+		System.out.println(bMessage);
+		
+		DecisionTreeNode dNodeA = new DecisionTreeNode(1, new ArrayList<Integer>(Arrays.asList(3, 4, 5)), 1, 0);
 		dNodeA.addDecision(bMessage);
 		
 		int finalOrder = dNodeA.getMajorityOrder();
