@@ -9,7 +9,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import da3.message.Ack;
@@ -408,6 +407,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 				receive(finalpMessage);
 			}
 		});
+		service.shutdown();
 	}
 
 	/*
@@ -424,6 +424,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 				receive(finalAck);
 			}
 		});
+		service.shutdown();
 	}
 	
 	public void initRounds() throws RemoteException
@@ -450,6 +451,7 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 				receive(finalSafe);
 			}
 		});
+		service.shutdown();
 	}
 
 	public int getRoundId() {

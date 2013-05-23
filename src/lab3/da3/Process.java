@@ -4,7 +4,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.hamcrest.core.IsInstanceOf;
@@ -85,7 +84,8 @@ public class Process {
 		regulateByzantineAgreement();
 		
 		setAllMessagesSent(false);
-		
+		//System.out.println("Progress: "+ getProcessId()+ " goes to round "+ synchronizer.getRoundId());
+		//System.out.println("Progress: "+ getProcessId()+ " has to send "+ outMessageNextRound.size());
 		//Send outgoing Messages generated in previous round but should be sent in this round.
 		for(PayloadMessage pMessage : outMessageNextRound)
 		{
@@ -94,7 +94,6 @@ public class Process {
 		outMessageNextRound.clear();
 		
 		setAllMessagesSent(true);
-		
 		
 		final ExecutorService service = Executors.newSingleThreadExecutor();
 		service.execute(new Runnable() {
@@ -108,7 +107,7 @@ public class Process {
 
 			}
 		});
-		
+		service.shutdown();
 	}
 	
 	

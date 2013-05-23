@@ -22,7 +22,7 @@ import da3.Process;
 
 
 public class AlgorithmTest {
-	public static final int TESTS = 10;
+	public static final int TESTS = 100;
 
 	Registry registry;
 
@@ -228,8 +228,8 @@ public class AlgorithmTest {
 		try {
 			//-------------------------------------------------------------------------------//
 			//Initialize 4 processes
-			int processCount = 10;
-			int fcount = 3;
+			int processCount = 5;
+			int fcount = 2 ;
 			int order = 1;
 			ArrayList<Process> processes = new ArrayList<Process>();
 			
@@ -265,9 +265,13 @@ public class AlgorithmTest {
 			}
 
 			
-			Thread.sleep(20*1000);
+			Thread.sleep(5*1000);
 			
-			
+			for(Process p : processes )
+			{
+				System.out.println("process: "+p.getProcessId());
+				System.out.println(p.decisionTree.toString());
+			}
 			
 			boolean allNonFaultyProcessAgree = true;
 			for(int i = 0; i<processCount-fcount; i++)
@@ -296,9 +300,10 @@ public class AlgorithmTest {
 		ArrayList<Process> processNFList = new ArrayList<Process>();
 		ArrayList<Process> processFList = new ArrayList<Process>();
 		Process initProcess;
-		Integer order = r.nextInt(2);
+		//Integer order = r.nextInt(2);
+		Integer order = 1;
 		Integer non_f = 5;
-		Integer f = 2;
+		Integer f = 1;
 		Integer pCount = f + non_f;
 		
 		for(int i = 0; i<non_f; i++)
@@ -320,7 +325,8 @@ public class AlgorithmTest {
 			p.register("localhost");
 		}
 		
-		initProcess = processList.get(r.nextInt(pCount));//r.nextInt(pCount)
+		//initProcess = processList.get(r.nextInt(pCount));//r.nextInt(pCount)
+		initProcess = processFList.get(0);//r.nextInt(pCount)
 		
 		for(Process p : processList)
 		{
@@ -355,20 +361,20 @@ public class AlgorithmTest {
 			e.printStackTrace();
 		}
 		
-		for(Process p : processList)
-		{
-			System.out.println("Process " + p.getProcessId() + " Messages In " + p.bMessageList.size());
-			for(ByzantineMessage bMessage : p.bMessageList)
-			{
-				System.out.println(bMessage.toString());
-			}
-			System.out.println("Process " + p.getProcessId() + " Messages Out " + p.bMessageListOut.size());
-			for(ByzantineMessage bMessage : p.bMessageListOut)
-			{
-				System.out.println(bMessage.toString());
-			}
-			System.out.println();
-		}
+//		for(Process p : processList)
+//		{
+//			System.out.println("Process " + p.getProcessId() + " Messages In " + p.bMessageList.size());
+//			for(ByzantineMessage bMessage : p.bMessageList)
+//			{
+//				System.out.println(bMessage.toString());
+//			}
+//			System.out.println("Process " + p.getProcessId() + " Messages Out " + p.bMessageListOut.size());
+//			for(ByzantineMessage bMessage : p.bMessageListOut)
+//			{
+//				System.out.println(bMessage.toString());
+//			}
+//			System.out.println();
+//		}
 
 		//System.out.println(processNFList.get(1).getDecisionTree().toString());
 		
