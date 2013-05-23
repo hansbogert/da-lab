@@ -15,5 +15,11 @@ public interface IHandleRMI extends Remote{
 	
 	public void transfer(Safe safe) throws RemoteException;
 	
+	public void initRounds() throws RemoteException;
 	
+	public void setUpDecisionTree(Integer topCommanderId, Integer f) throws RemoteException;
+	
+	public int getMajority() throws RemoteException;
+	
+	public void initByzantineAlgorithm(Integer f, Integer order)  throws RemoteException;
 }

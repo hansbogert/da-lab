@@ -109,6 +109,16 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 		}
 	}
 
+	public void initByzantineAlgorithm(Integer f, Integer order)  throws RemoteException
+	{
+		process.initByzantineAlgorithm(f, order);
+	}
+	
+	public int getMajority() throws RemoteException
+	{
+		return process.getDecisionTree().getMajorityOrder();
+	}
+
 	public void send(PayloadMessage pMessage) {
 		try {
 			currentMessageId++;
@@ -414,6 +424,16 @@ public class Synchronizer extends UnicastRemoteObject implements IHandleRMI {
 				receive(finalAck);
 			}
 		});
+	}
+	
+	public void initRounds() throws RemoteException
+	{
+		process.initRounds();
+	}
+	
+	public void setUpDecisionTree(Integer topCommanderId, Integer f) throws RemoteException
+	{
+		process.setUpDecisionTree(topCommanderId, f);
 	}
 
 	/*
