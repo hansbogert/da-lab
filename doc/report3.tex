@@ -1,0 +1,186 @@
+\documentclass{article}
+\usepackage{listings}
+\title{Distributed algorithms - excercise 3}
+\author{Wing Lung Ngai\\1511483 \and Hans van den Bogert \\1307983}
+\begin{document} 
+\maketitle
+\section{Setup}
+We use an alpha synchronizer for the synchronization. We implement the
+Byzantine algorithm as described by lectures notes. 
+
+\section{Tests}
+For the following sections we will use a small setup using 5 processes
+(including commander) and vary with the $f$ values
+
+ Communication cost in the case $f=1$, the
+recursive level depth is 2, this means that in the first round every
+node will contact every node - resulting in:
+\begin{itemize}
+\item Round 1: N - 1 messages to the lieutenants, thus 4
+
+\item Round 2: Every lieutenant from round 1 will send messages to $N -
+2$, thus $4*3 = 12$
+\end{itemize}
+thus in total a message communication cost of at most 4 + 12 = 16
+messages.
+
+\subsection{Faulty lieutenant never sends}
+Taking the above setup in mind, as a lower bound we can have (assuming
+the commander sends all) and a lieutenant is faulty: $16 - 3 = 13$
+where $3$ is the size of a subtree on OM(1).
+
+Now as our faulty process is a lieutenant the first round will not
+have errors, the error will occur in the 2nd round, more specifically,
+the lieutenant will never send anything in our testcase, resulting in
+a constant message communication of 13 messages.
+\paragraph{Results}
+The results are:
+\begin{lstlisting}
+final order :1
+Total messages sent: 13
+Total messages withheld: 3
+(repeated 10x)
+\end{lstlisting}
+This is in line with our expectations.
+
+\subsection{Flip-coin method for sending}
+As in the previous subsection the the upper and lower bound are 16 and
+13 respectively. The faulty lieutenant will now send sometimes
+depending on a 50\% chance.
+
+We now expect the outcomes to be indeed between the upper and lower
+bound values.
+\paragraph{Results}
+We will list the resulting total Byzantine messages:
+\begin{lstlisting}
+15
+15
+14
+13
+15
+14
+15
+14
+15
+15
+
+\end{lstlisting}
+The amount of messages sent is within the boundaries of our expectation.
+\subsection{Flip order}
+Like the previous section randomness is introduced, however now the
+order propogated by the faulty lieutenant is either 0 or 1 (50\%
+chance)
+
+\paragraph{Expectations}
+We expect all processes to message correctly and thus messages amount
+is 16.  Besides that we expect there to be a consencus about the
+order, although sometimes other nodes may be influenced by the faulty
+lieutenant.
+
+\paragraph{Results}
+We expect the end result to be 1 (as our initial order is 1.)
+\begin{lstlisting}
+final order :1
+(repeated 10x)
+\end{lstlisting}
+This is what we expected, the $f$ is lower than one third of 5, so our
+Byzantine algorithm should give the correct answers.
+
+\subsection{Commander is faulty}
+Like the previous setups, but now the commander is faulty with 50\%
+chance on sending as well as flipping the value, nevertheless the
+consencus for the lieutenants should be right.
+
+\paragraph{Results}
+\begin{lstlisting}
+Process 6 decided on order 1 at round 1
+Process 1 decided on order 0 at round 3
+Process 5 decided on order 0 at round 3
+Process 2 decided on order 0 at round 3
+Process 4 decided on order 0 at round 3
+Process 3 decided on order 0 at round 3
+(repeated 10x)
+\end{lstlisting}
+
+The non faulty processes do agree on the same order. Thus even if the
+commander sends out false orders, the lieutenants agree.
+
+\subsection{$f >= 1/3N$ }
+We will now look into the case where $f = 2$ and $N = 5$, so the
+Byzantine algorithm is not guaranteed to give the proper original
+order for all lieutenants.
+
+\paragraph{results}
+Example run, there  
+\begin{lstlisting}
+Process 1 decided on order 1 at round 1
+Process 2 decided on order 0 at round 4
+Process 3 decided on order 0 at round 4
+Process 5 decided on order 1 at round 4
+Process 4 decided on order 1 at round 4
+\end{lstlisting}
+\paragraph{Analyze}
+This test already shows a non-concensus output. But how did the
+processes get to their decision, the decision trees for the non-faulty
+processes are as follows.
+\begin{lstlisting}
+Process 1 (commander):
+Node level: 0 Commander: 1 Order 1
+  Node level: 1 Commander: 2 Order null
+    Node level: 2 Commander: 3 Order null
+    Node level: 2 Commander: 4 Order null
+    Node level: 2 Commander: 5 Order null
+  Node level: 1 Commander: 3 Order null
+    Node level: 2 Commander: 2 Order null
+    Node level: 2 Commander: 4 Order null
+    Node level: 2 Commander: 5 Order null
+  Node level: 1 Commander: 4 Order null
+    Node level: 2 Commander: 2 Order null
+    Node level: 2 Commander: 3 Order null
+    Node level: 2 Commander: 5 Order null
+  Node level: 1 Commander: 5 Order null
+    Node level: 2 Commander: 2 Order null
+    Node level: 2 Commander: 3 Order null
+    Node level: 2 Commander: 4 Order null
+
+Process: 2
+Node level: 0 Commander: 1 Order 1
+  Node level: 1 Commander: 3 Order 1
+    Node level: 2 Commander: 4 Order 0
+    Node level: 2 Commander: 5 Order 0
+  Node level: 1 Commander: 4 Order 1
+    Node level: 2 Commander: 3 Order 0
+    Node level: 2 Commander: 5 Order 0
+  Node level: 1 Commander: 5 Order 1
+    Node level: 2 Commander: 3 Order 0
+    Node level: 2 Commander: 4 Order 0
+
+Process 3:
+Node level: 0 Commander: 1 Order 1
+  Node level: 1 Commander: 2 Order 1
+    Node level: 2 Commander: 4 Order 0
+    Node level: 2 Commander: 5 Order 0
+  Node level: 1 Commander: 4 Order 0
+    Node level: 2 Commander: 2 Order 1
+    Node level: 2 Commander: 5 Order 0
+  Node level: 1 Commander: 5 Order 0
+    Node level: 2 Commander: 2 Order 1
+    Node level: 2 Commander: 4 Order 0
+\end{lstlisting}
+Let us explain the meaning of this out with respect to process '2'.
+The output represents the decision tree as been formed by the messages
+P2 got during the algorithm. In this case due to that all the leaves
+are 0, these 0 values are the majority during every level of the
+majority function, so the  eventual decision on the order for P2 is '0'.
+The same can be said for P3.
+
+
+\section{Scaling}
+Scaling our system works up to the case of $N=10$ and $f=2$ or $N=9$
+and $f=3$ The shear amount of threads created due to the processing of
+the messages is too much for the JVM/(and or computer) to handle,
+mind that we are in the order of $3*10^3 = (9*8*7*6)$ messages in the
+last round.
+
+
+\end{document}
